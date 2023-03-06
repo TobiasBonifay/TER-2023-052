@@ -1,8 +1,6 @@
-import libvirt
 import sys
 import os 
 import socket
-import subprocess
 import time
 import threading
 
@@ -22,6 +20,53 @@ COEFF_KB_TO_BYTE = 1024
 
 
 
+##############################################
+#
+# Overview : 
+# 
+##############################################
+
+# This script is used to run data generation experiments 
+#
+#  - it generate data for 8 different reduction values (0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2)
+# (a reduction value is the coefficient to multiply the VM's memory to get the cgroup limitation)
+#
+#  - for each of these 8 reduction values, it run 5 measurements
+#
+
+
+
+##############################################
+#
+# Script's architecture :
+#
+##############################################
+#
+#  - it run on 4 different threads :
+#       - one to run the benchmark
+#       - one to run the host
+#       - one to run the client
+#       - one to run the cgroup limitation
+#
+#  - it takes 2 arguments :
+#       - the duration of the experiment
+#       - the sampling frequency of the experiment
+#
+
+
+
+
+##############################################
+#
+# Host's thread :
+#
+##############################################
+
+'''
+ run the host's thread
+ it run C executable that get memory's indicators
+ it store the indicators in a file at /outputs/<reduction_value>/<measurement_nbr>/out.txt
+'''
 def run_exec_host(reduction_value,measurement,start_time):
     print_log("host is running")
     dir_output = 'outputs/0_'+str(reduction_value).split(".")[1] +"/"+ str(measurement)
@@ -29,9 +74,15 @@ def run_exec_host(reduction_value,measurement,start_time):
     
 
         
+##############################################
+#
+# Client's thread :
+#
+##############################################
 
-
-#write name of benchmark file to have them sort by time of creation
+'''
+write name of benchmark file to have them sort by time of creation
+'''
 def format_bench_name(name,t,n):
     if int(t/n)<1:
         return format_bench_name("0"+name,t,n/10)
@@ -39,7 +90,11 @@ def format_bench_name(name,t,n):
         return name
 
     
-#start a benchmark every 30s
+'''
+ it run apache benchmark to get the number of request per second
+ start a benchmark every 45s
+ it store the benchmarks result in a file at /benchmarks/<reduction_value>/<measurement_nbr>/<time>.csv
+'''
 def run_benchmark(start_time,reduction_value,measurement):
     print_log("benchmark is running")
     n = 30.0
@@ -48,27 +103,31 @@ def run_benchmark(start_time,reduction_value,measurement):
 
     while(True):
         t = round(time.process_time() - start_time)
+        #every 45s we start a new benchmark
         if t==n:
             t = round(t)
             print_log("benchmark : "+str(t))
             dir_bench = 'benchmarks/0_'+str(reduction_value).split(".")[1] +"/"+ str(measurement)
+            #100000 request, 500 concurrents, ask apache http server that is running on the VM
             os.system("ab -n 100000 -c 500 -e "+dir_bench+"/"+format_bench_name(str(t),t,10000)+".csv http://192.168.122.49:80/")
             n +=45
             b +=1
+        #if time is over, we stop the benchmark
         if t>=(DURATION):
             print_log("END BENCHMARK AT t="+str(t))
             break
 
+##############################################
+#
+# cgroup limitation's thread :
+#
+##############################################
 
-def get_vm_ram():
-    vm_ram = 0
-    f  = open("socket/VmRAM","r")
-    vm_ram = f.read()
-    if vm_ram == "":
-    	return 0
-    else:
-   	 return float(vm_ram)
-
+'''
+get the VM's memory.
+When we run the C exec file, mem_proc is store in constants/MemProc
+This method read this file and return the value
+'''
 def get_mem_process_use():
     f = open("constants/MemProc","r")
     mem_process_use = f.read()
@@ -76,12 +135,19 @@ def get_mem_process_use():
     return float(mem_process_use)
 
 
-
+'''
+ open the cgroup file and write the new limitation
+'''
 def change_limit_cgroup_file(cgroup_limit):
     with open(r"/sys/fs/cgroup/machine.slice/machine-qemu\x2d3\x2dubuntu20.04.scope/libvirt/memory.max","w") as fmax:
         fmax.write(cgroup_limit)
 
-
+'''
+ function called by the thread to run the cgroup limitation
+ While loop last DURATION seconds
+ at 1/3 of DURATION, we set the cgroup limitation at mem_proc
+ at 2/3 of DURATION, we set the cgroup limitation at reduction_value*mem_proc
+'''
 def change_cgroup_memory_limit(start_time,reduction_value):
     
 
@@ -136,7 +202,20 @@ def change_cgroup_memory_limit(start_time,reduction_value):
     time.sleep(DURATION/3)
             
 
+##############################################
+#
+# Client's thread :
+#
+##############################################
 
+
+'''
+ function called by the thread to run the client
+ While loop last DURATION seconds
+ every FINESSE seconds, we send a GET request to the server
+ server send back the VM's memory
+ we store the result in a file at /outputs/<reduction_value>/<measurement_nbr>/outvm.txt
+'''
 def run_client(client,start_time,reduction_value,measurement,dir_output):
 
     print_log("client is running")
@@ -153,6 +232,9 @@ def run_client(client,start_time,reduction_value,measurement,dir_output):
                 f_vmram.write(str(round(t,1))+" "+donnees.decode()+"\n")
                 
 
+'''
+    send a GET request to the server
+'''
 def get_server(client):
     
     message ="GET"
@@ -160,10 +242,41 @@ def get_server(client):
     if (n != len(message)):
             print_log('Erreur envoi.')
             
-     
+
+##############################################
+#
+# Utils :
+#
+##############################################
+
+'''
+ log printer
+ store the output of the script in output.log
+'''
 def print_log(message):
     with open("output.log","a+") as flog:
         flog.write(message+"\n")
+
+
+##############################################
+#
+# Main :
+#
+# - Read arguments
+# - Create the output directory
+# - Create the client socket
+# - Connect socket to the server
+#  2 nested loop :
+#   - 1st loop : reduction_value
+#   - 2nd loop : measurement
+# 
+# On each iteration, we create:
+# - a thread for the client,
+# - a thread for the cgroup limitation,
+# - a thread for the benchmark,
+# - a thread for the host's memory measurement
+
+##############################################
 
 if __name__ == "__main__":
 
