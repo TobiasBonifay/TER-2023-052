@@ -3,7 +3,9 @@ Code repository and experiment results for TER-2023-052
 
 ```
 TER-2023-052
-│   README.md    
+│   README.md : this file   
+│   LOG.md : working log
+│   TOPIC.md : the original topic from the supervisor
 │
 │───newResearch
 │
