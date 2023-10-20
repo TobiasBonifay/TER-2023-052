@@ -19,7 +19,7 @@ This prediction aids in deciding whether to decrease the allocated memory amount
 ## What is the goal of this research
 The goal of this research is to optimize memory usage in VMs without compromising their performance. 
 To achieve this, we will use the network bandwidth as a metric to measure VM performance instead of server web requests latency.
-The completion time may be a better metric, however, it demands more resources to measure.
+While completion time might be a superior metric for VM performance, its measurement requires a more intrusive approach, which is not ideal.
 
 Building on this foundation, I will further investigate memory optimization techniques and enhance the machine learning algorithm's efficiency. 
 By continuously analyzing VM performance data, the algorithm can be refined to make more accurate predictions. 
@@ -34,7 +34,7 @@ Discovered the difference between swapping and ballooning.
 
 ## WEEK 2
 I will use httperf to measure the completion time of web requests.
-I will need to add a python program to capture packets from and to the VM owning the web server.
+I will need to add a python program to capture packets on the fly from and to the VM owning the web server.
 Using this capture to estimate the actual network bandwidth used by the VM.
 
 Then I will need to train a machine learning model to predict the network throughput using the previous collected data.
