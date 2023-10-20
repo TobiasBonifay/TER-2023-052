@@ -98,7 +98,7 @@ main() {
     echo "Creating the VMs..."
     create_vm ${VM1_NAME}
     create_vm ${VM2_NAME}
-    create_vm ${VM3_NAME}
+    #create_vm ${VM3_NAME}
     echo "Done"
     echo "Cleaning up..."
     kill $HTTP_SERVER_PID

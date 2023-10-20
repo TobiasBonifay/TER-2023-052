@@ -39,7 +39,13 @@ Using this capture to estimate the actual network bandwidth used by the VM.
 
 Then I will need to train a machine learning model to predict the network throughput using the previous collected data.
 
-## TO DO
+## WEEK 3
+I fixed the LOG.md file according to the supervisor's comments.
+I read the existing scripts made by Alexis Merienne.
+I created an automated script to install a fresh lab environment.
+
+
+## NOTES
 Creating two VMs on a host machine that are connected by a virtual bridge network.
 I will use the KVM hypervisor to create the VMs to stay consistent with the previous work.
 The cgroup tool was used to restrict the memory of the VMs in the previous work, I will use it too.
@@ -49,5 +55,5 @@ Will be a diagram on the final report.
 
 - Virtual machine 1: web server (apache)
 - Virtual machine 2: client http (httperf)
-- Virtual machine 3: python program to capture packets ?
+- Virtual machine 3 OR host machine: python program to capture packets ?
 - Virtual bridge network
