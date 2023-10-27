@@ -77,4 +77,17 @@ main() {
 }
 
 # Run the main script
+# if arg delete is passed, delete the lab
+if [ "$1" == "delete" ]; then
+    for vm_name in "${VM_NAMES[@]}"; do
+        virsh destroy "${vm_name}"
+        virsh undefine "${vm_name}"
+        rm "/var/lib/libvirt/images/${vm_name}.qcow2"
+    done
+    # rm debian.iso
+    rm preseed.cfg
+    echo "Lab deleted"
+    exit 0
+fi
+
 main
