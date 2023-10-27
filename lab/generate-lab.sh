@@ -94,6 +94,7 @@ create_vm() {
     virt-install \
         --name "${vm_name}" \
         --ram ${RAM} \
+        --initrd-inject="preseed.cfg" \
         --disk path="/var/lib/libvirt/images/${vm_name}.qcow2,size=${DISK_SIZE}" \
         --vcpus 1 \
         --os-variant debian12 \
@@ -102,7 +103,7 @@ create_vm() {
         --console pty,target_type=serial \
         --location ${ISO_PATH} \
         --extra-args "console=tty1 url=http://${host_ip}:8000/preseed.cfg" \
-        --debug 2>&1 | tee "${log_file}"
+        --debug 2>&1 | tee "${log_file}" &
 }
 
 # Main script
@@ -114,6 +115,7 @@ main() {
     echo "Creating the VMs..."
     create_vm ${VM1_NAME}
     create_vm ${VM2_NAME}
+    wait
     echo "Done"
 }
 
