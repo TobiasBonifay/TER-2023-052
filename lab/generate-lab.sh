@@ -10,7 +10,7 @@ C
 # Check if all commands are available
 check_commands() {
     echo "Checking if all commands are available"
-    for cmd in virt-install virsh wget python3; do
+    for cmd in virt-install virsh wget; do
         if ! command -v "$cmd" &> /dev/null; then
             echo "$cmd could not be found"
             exit 1
@@ -30,27 +30,12 @@ check_iso() {
     fi
 }
 
-# Run the HTTP server to serve the preseed file
-start_http_server() {
-    echo "Starting HTTP server..."
-    python3 -m http.server 8000 &> /dev/null &
-    HTTP_SERVER_PID=$!
-    echo "HTTP server started with PID: $HTTP_SERVER_PID"
-    sleep 3
-    if ! ps -p $HTTP_SERVER_PID &> /dev/null; then
-        echo "HTTP server could not be started"
-        exit 1
-    else
-        echo "HTTP server started"
-    fi
-}
-
 # VM configuration
 configure_vm() {
     VM1_NAME="apache_server_vm"
     VM2_NAME="client_httperf_vm"
     VM3_NAME="packet_capture_vm"
-    DISK_SIZE=6
+    DISK_SIZE=6G
     RAM="2048"
     BRIDGE_NAME="virbr10"
     ISO_PATH="debian.iso"
@@ -78,10 +63,10 @@ create_vm() {
     virt-install \
         --name "${vm_name}" \
         --ram ${RAM} \
-        --disk size=${DISK_SIZE} \
+        --disk path=/var/lib/libvirt/images/"${vm_name}".qcow2,size=${DISK_SIZE} \
         --vcpus 1 \
         --os-variant debian12 \
-        --network network=${BRIDGE_NAME} \
+        --network bridge=${BRIDGE_NAME} \
         --graphics none \
         --console pty,target_type=serial \
         --location ${ISO_PATH} \
@@ -92,28 +77,12 @@ create_vm() {
 main() {
     check_commands
     check_iso
-    start_http_server
     configure_vm
     echo "Creating the VMs..."
     create_vm ${VM1_NAME}
     create_vm ${VM2_NAME}
     echo "Done"
-    echo "Cleaning up..."
-    kill $HTTP_SERVER_PID
-    echo "Done"
 }
 
 # Run the main script
 main
-
-
-restore() {
-    virsh destroy ${VM1_NAME}
-    virsh undefine ${VM1_NAME}
-    virsh destroy ${VM2_NAME}
-    virsh undefine ${VM2_NAME}
-    virsh net-destroy ${BRIDGE_NAME}
-    virsh net-undefine ${BRIDGE_NAME}
-    # rm debian.iso
-    rm preseed.cfg
-}
