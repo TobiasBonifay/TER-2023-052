@@ -13,6 +13,10 @@ VM2_NAME="client_httperf_vm"
 BRIDGE_NAME="virbr10"
 ISO_PATH="debian.iso"
 
+get_host_ip() {
+    # This assumes you are using a common subnet. You might want to adjust the grep command if not.
+    ip addr show | grep "inet " | grep -v "127.0.0.1" | awk '{print $2}' | cut -d/ -f1 | head -n 1
+}
 # Check if all commands are available
 check_commands() {
     echo "Checking if all commands are available"
@@ -41,13 +45,21 @@ start_http_server() {
     echo "Starting HTTP server..."
     python3 -m http.server 8000 &> /dev/null &
     HTTP_SERVER_PID=$!
-    echo "HTTP server started with PID: $HTTP_SERVER_PID"
     sleep 3
-    if ! ps -p $HTTP_SERVER_PID &> /dev/null; then
+    if ! ps -p "$HTTP_SERVER_PID" &> /dev/null; then
         echo "HTTP server could not be started"
-        exit 1
+        # exit 1
     else
-        echo "HTTP server started"
+        echo "HTTP server started successfully"
+    fi
+}
+
+
+stop_http_server() {
+    if [ -f "/tmp/http_server.pid" ]; then
+        HTTP_SERVER_PID=$(cat /tmp/http_server.pid)
+        kill "$HTTP_SERVER_PID"
+        rm /tmp/http_server.pid
     fi
 }
 
@@ -76,6 +88,9 @@ configure_vm() {
 # Create VM function
 create_vm() {
     local vm_name=$1
+    local log_file="/tmp/log/${vm_name}_install.log"
+    local host_ip=$(get_host_ip)
+
     virt-install \
         --name "${vm_name}" \
         --ram ${RAM} \
@@ -83,10 +98,11 @@ create_vm() {
         --vcpus 1 \
         --os-variant debian12 \
         --network network=${BRIDGE_NAME} \
-        --graphics none \
+        --graphics spice \
         --console pty,target_type=serial \
         --location ${ISO_PATH} \
-        --extra-args 'console=tty0 url=http://localhost:8000/preseed.cfg'
+        --extra-args "console=tty1 url=http://${host_ip}:8000/preseed.cfg" \
+        --debug 2>&1 | tee "${log_file}"
 }
 
 # Main script
@@ -99,9 +115,6 @@ main() {
     create_vm ${VM1_NAME}
     create_vm ${VM2_NAME}
     echo "Done"
-    echo "Cleaning up..."
-    kill $HTTP_SERVER_PID
-    echo "Done"
 }
 
 # Run the main script if no args
@@ -111,6 +124,7 @@ fi
 
 # if arg delete is passed, delete the lab
 if [ "$1" == "delete" ]; then
+    stop_http_server
     virsh destroy ${VM1_NAME}
     virsh undefine ${VM1_NAME}
     virsh destroy ${VM2_NAME}
