@@ -1,17 +1,22 @@
 #!/bin/bash
 
-# Lab Configuration
-LAB_NAME="my_lab"
-VM_NAMES=("apache_server_vm" "client_httperf_vm")
-DISK_SIZE=6
-RAM="2048"
+:<< C
+This script will generate a lab with 3 VMs:
+    - VM1: Apache server
+    - VM2: Client with httperf
+    - VM3: Packet capture
+C
+
+VM1_NAME="apache_server_vm"
+VM2_NAME="client_httperf_vm"
+# VM3_NAME="packet_capture_vm"
 BRIDGE_NAME="virbr10"
-ISO_URL="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.2.0-amd64-netinst.iso"
+ISO_PATH="debian.iso"
 
 # Check if all commands are available
 check_commands() {
     echo "Checking if all commands are available"
-    for cmd in virt-install virsh wget; do
+    for cmd in virt-install virsh wget python3; do
         if ! command -v "$cmd" &> /dev/null; then
             echo "$cmd could not be found"
             exit 1
@@ -25,34 +30,32 @@ check_commands() {
 check_iso() {
     echo "Checking if the ISO is available"
     if [ ! -f debian.iso ]; then
-        wget "$ISO_URL" -O debian.iso
+        wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.2.0-amd64-netinst.iso -O debian.iso
     else
         echo "ISO found"
     fi
 }
 
-# Create VM function
-create_vm() {
-    local vm_name=$1
-    virt-install \
-        --name "${vm_name}" \
-        --ram ${RAM} \
-        --disk path="/var/lib/libvirt/images/${vm_name}.qcow2,size=${DISK_SIZE}" \
-        --vcpus 1 \
-        --os-variant debian12 \
-        --network bridge=${BRIDGE_NAME} \
-        --graphics none \
-        --console pty,target_type=serial \
-        --location debian.iso \
-        --extra-args "console=tty0 url=http://localhost:8000/preseed.cfg"
+# Run the HTTP server to serve the preseed file
+start_http_server() {
+    echo "Starting HTTP server..."
+    python3 -m http.server 8000 &> /dev/null &
+    HTTP_SERVER_PID=$!
+    echo "HTTP server started with PID: $HTTP_SERVER_PID"
+    sleep 3
+    if ! ps -p $HTTP_SERVER_PID &> /dev/null; then
+        echo "HTTP server could not be started"
+        exit 1
+    else
+        echo "HTTP server started"
+    fi
 }
 
-# Main script
-main() {
-    check_commands
-    check_iso
+# VM configuration
+configure_vm() {
+    DISK_SIZE=6
+    RAM="2048"
 
-    # Create the bridge network if it doesn't exist
     if ! virsh net-info $BRIDGE_NAME &> /dev/null; then
         virsh net-define <(echo "
 <network>
@@ -68,26 +71,56 @@ main() {
         virsh net-start ${BRIDGE_NAME}
         virsh net-autostart ${BRIDGE_NAME}
     fi
+}
 
+# Create VM function
+create_vm() {
+    local vm_name=$1
+    virt-install \
+        --name "${vm_name}" \
+        --ram ${RAM} \
+        --disk path="/var/lib/libvirt/images/${vm_name}.qcow2,size=${DISK_SIZE}" \
+        --vcpus 1 \
+        --os-variant debian12 \
+        --network network=${BRIDGE_NAME} \
+        --graphics none \
+        --console pty,target_type=serial \
+        --location ${ISO_PATH} \
+        --extra-args 'console=tty0 url=http://localhost:8000/preseed.cfg'
+}
+
+# Main script
+main() {
+    check_commands
+    check_iso
+    start_http_server
+    configure_vm
     echo "Creating the VMs..."
-    for vm_name in "${VM_NAMES[@]}"; do
-        create_vm "${vm_name}"
-    done
+    create_vm ${VM1_NAME}
+    create_vm ${VM2_NAME}
+    echo "Done"
+    echo "Cleaning up..."
+    kill $HTTP_SERVER_PID
     echo "Done"
 }
 
-# Run the main script
+# Run the main script if no args
+if [ $# -eq 0 ]; then
+    main
+fi
+
 # if arg delete is passed, delete the lab
 if [ "$1" == "delete" ]; then
-    for vm_name in "${VM_NAMES[@]}"; do
-        virsh destroy "${vm_name}"
-        virsh undefine "${vm_name}"
-        rm "/var/lib/libvirt/images/${vm_name}.qcow2"
-    done
+    virsh destroy ${VM1_NAME}
+    virsh undefine ${VM1_NAME}
+    virsh destroy ${VM2_NAME}
+    virsh undefine ${VM2_NAME}
+    virsh net-destroy ${BRIDGE_NAME}
+    virsh net-undefine ${BRIDGE_NAME}
+    rm /var/lib/libvirt/images/${VM1_NAME}.qcow2
+    rm /var/lib/libvirt/images/${VM2_NAME}.qcow2
     # rm debian.iso
-    rm preseed.cfg
+    # rm preseed.cfg
     echo "Lab deleted"
     exit 0
 fi
-
-main
