@@ -50,7 +50,7 @@ configure_vm() {
     VM1_NAME="apache_server_vm"
     VM2_NAME="client_httperf_vm"
     VM3_NAME="packet_capture_vm"
-    DISK_SIZE="5G"
+    DISK_SIZE=6
     RAM="2048"
     BRIDGE_NAME="virbr10"
     ISO_PATH="debian.iso"
@@ -80,13 +80,12 @@ create_vm() {
         --ram ${RAM} \
         --disk size=${DISK_SIZE} \
         --vcpus 1 \
-        --os-type linux \
         --os-variant debian12 \
         --network network=${BRIDGE_NAME} \
         --graphics none \
         --console pty,target_type=serial \
         --location ${ISO_PATH} \
-        --extra-args 'console=ttyS0,115200n8 serial auto url=http://localhost:8000/preseed.cfg'
+        --extra-args 'console=tty0 url=http://localhost:8000/preseed.cfg'
 }
 
 # Main script
@@ -98,7 +97,6 @@ main() {
     echo "Creating the VMs..."
     create_vm ${VM1_NAME}
     create_vm ${VM2_NAME}
-    #create_vm ${VM3_NAME}
     echo "Done"
     echo "Cleaning up..."
     kill $HTTP_SERVER_PID
@@ -107,3 +105,15 @@ main() {
 
 # Run the main script
 main
+
+
+restore() {
+    virsh destroy ${VM1_NAME}
+    virsh undefine ${VM1_NAME}
+    virsh destroy ${VM2_NAME}
+    virsh undefine ${VM2_NAME}
+    virsh net-destroy ${BRIDGE_NAME}
+    virsh net-undefine ${BRIDGE_NAME}
+    # rm debian.iso
+    rm preseed.cfg
+}
