@@ -1,11 +1,12 @@
 #!/bin/bash
 
-:<< C
-This script will generate a lab with 3 VMs:
-    - VM1: Apache server
-    - VM2: Client with httperf
-    - VM3: Packet capture
-C
+# Lab Configuration
+LAB_NAME="my_lab"
+VM_NAMES=("apache_server_vm" "client_httperf_vm")
+DISK_SIZE=6
+RAM="2048"
+BRIDGE_NAME="virbr10"
+ISO_URL="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.2.0-amd64-netinst.iso"
 
 # Check if all commands are available
 check_commands() {
@@ -24,22 +25,34 @@ check_commands() {
 check_iso() {
     echo "Checking if the ISO is available"
     if [ ! -f debian.iso ]; then
-        wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.2.0-amd64-netinst.iso -O debian.iso
+        wget "$ISO_URL" -O debian.iso
     else
         echo "ISO found"
     fi
 }
 
-# VM configuration
-configure_vm() {
-    VM1_NAME="apache_server_vm"
-    VM2_NAME="client_httperf_vm"
-    VM3_NAME="packet_capture_vm"
-    DISK_SIZE=6G
-    RAM="2048"
-    BRIDGE_NAME="virbr10"
-    ISO_PATH="debian.iso"
+# Create VM function
+create_vm() {
+    local vm_name=$1
+    virt-install \
+        --name "${vm_name}" \
+        --ram ${RAM} \
+        --disk path="/var/lib/libvirt/images/${vm_name}.qcow2,size=${DISK_SIZE}" \
+        --vcpus 1 \
+        --os-variant debian12 \
+        --network bridge=${BRIDGE_NAME} \
+        --graphics none \
+        --console pty,target_type=serial \
+        --location debian.iso \
+        --extra-args "console=tty0 url=http://localhost:8000/preseed.cfg"
+}
 
+# Main script
+main() {
+    check_commands
+    check_iso
+
+    # Create the bridge network if it doesn't exist
     if ! virsh net-info $BRIDGE_NAME &> /dev/null; then
         virsh net-define <(echo "
 <network>
@@ -55,32 +68,11 @@ configure_vm() {
         virsh net-start ${BRIDGE_NAME}
         virsh net-autostart ${BRIDGE_NAME}
     fi
-}
 
-# Create VM function
-create_vm() {
-    local vm_name=$1
-    virt-install \
-        --name "${vm_name}" \
-        --ram ${RAM} \
-        --disk path=/var/lib/libvirt/images/"${vm_name}".qcow2,size=${DISK_SIZE} \
-        --vcpus 1 \
-        --os-variant debian12 \
-        --network bridge=${BRIDGE_NAME} \
-        --graphics none \
-        --console pty,target_type=serial \
-        --location ${ISO_PATH} \
-        --extra-args 'console=tty0 url=http://localhost:8000/preseed.cfg'
-}
-
-# Main script
-main() {
-    check_commands
-    check_iso
-    configure_vm
     echo "Creating the VMs..."
-    create_vm ${VM1_NAME}
-    create_vm ${VM2_NAME}
+    for vm_name in "${VM_NAMES[@]}"; do
+        create_vm "${vm_name}"
+    done
     echo "Done"
 }
 
