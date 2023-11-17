@@ -4,7 +4,7 @@ HOST = '192.168.122.49'
 PORT = 8080
 
 
-class ClientMemVM():
+class ClientMemVM:
 
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

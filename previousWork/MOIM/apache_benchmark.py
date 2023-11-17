@@ -6,7 +6,7 @@ from subprocess import PIPE, run
 MOTIF_RE_FLOAT = "\d+"
 
 
-class Benchmark():
+class Benchmark:
 
     def __init__(self):
         pass
