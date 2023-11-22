@@ -1,5 +1,3 @@
-import tensorflow as tf
-from tensorflow.python.keras.models import load_model
 
 
 class Inferance:
@@ -8,10 +6,7 @@ class Inferance:
         pass
 
     def predict(self, bash):
-        try:
-            model = load_model("model")
-            tr_predict = model(bash)
-            return tr_predict.numpy()[0]
-        except:
-            print("Error while loading model")
+        #model = tf.keras.models.load_model('model.h5')
+        #tr_predict = model(bash)
+        #return tr_predict.numpy()[0]
         return 0

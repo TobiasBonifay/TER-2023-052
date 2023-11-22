@@ -8,7 +8,6 @@ from apache_benchmark import Benchmark
 from inferance import Inferance
 from colorama import init, Fore, Back, Style
 
-"""
 DURATION = 99999
 FINESSE = 0.5
 TR = 0
@@ -35,7 +34,7 @@ def write_output(time, mem_limit, tr, action):
         f_out.write("{},{},{},{}\n".format(time, mem_limit, tr, action))
 
 
-class Mechanism():
+class Mechanism:
     bash_tmp = []
     bash = []
     curr_tr_value = 0
@@ -127,25 +126,28 @@ class Mechanism():
 
             print(Style.BRIGHT + Fore.RED + "ADD MEMORY")
             write_output(round(self.t, 2), int(self.memorygetter.get_limit_cgroup() / 1048576), time_reponse, 1)
-"""
+
 
 if __name__ == "__main__":
-
-    """"
+    print("1")
     with open("out", "w") as f_out:
         f_out.write("")
-
+    print("2")
     memorygetter = MemoryGetter()
+    print("3", memorygetter)
     clientMemVm = ClientMemVM()
+    print("4", clientMemVm)
     clientMemVm.connect()
+    print("5")
     time.sleep(2)
-
+    print("6")
     mechanism = Mechanism(memorygetter, clientMemVm)
+    print("7", mechanism)
     mechanism.run()
-    """""
+    print("8")
 
-#cut_value = memory.current * 0.75
-#if RNN(cut_value) > SUEIL:
+# cut_value = memory.current * 0.75
+# if RNN(cut_value) > SUEIL:
 #    memory.max *= 1.25
-#else:
+# else:
 #    memory.max = cut_value
