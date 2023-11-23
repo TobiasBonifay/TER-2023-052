@@ -25,7 +25,7 @@ def run_bench():
 
 
 def change_limit_cgroup_file(cgroup_limit):
-    with open(r"/sys/fs/cgroup/machine.slice/machine-qemu\x2d5\x2dubuntu20.04.scope/libvirt/memory.max", "w") as fmax:
+    with open(r"/sys/fs/cgroup/machine.slice/machine-qemu\x2d1\x2ddebian12\x2d1.scope/libvirt/memory.max", "w") as fmax:
         fmax.write(cgroup_limit)
 
 
@@ -129,12 +129,15 @@ class Mechanism:
 
 
 if __name__ == "__main__":
-    print("1")
     with open("out", "w") as f_out:
         f_out.write("")
-    print("2")
+
     memorygetter = MemoryGetter()
-    print("3", memorygetter)
+    print("Mem proc", memorygetter.get_mem_proc())
+    print("Limit cgroup", memorygetter.get_limit_cgroup())
+    print("Swap used", memorygetter.get_swap_used())
+    print("Mem used", memorygetter.get_mem_used())
+
     clientMemVm = ClientMemVM()
     print("4", clientMemVm)
     clientMemVm.connect()

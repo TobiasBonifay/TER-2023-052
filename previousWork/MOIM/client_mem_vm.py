@@ -1,7 +1,7 @@
 import socket
 
-HOST = '192.168.122.49'
-PORT = 8080
+HOST = '192.168.100.75'
+PORT = 80
 
 
 class ClientMemVM:
