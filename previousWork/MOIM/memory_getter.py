@@ -4,7 +4,7 @@ machine1 = "\\x2d1\\x2ddebian12\\x2d1.scope/"
 machine2 = "\\x2d2\\x2ddebian12\\x2d2.scope/"
 
 S = "/sys/fs/cgroup/machine.slice/machine-qemu"
-MOTIF = "\d+"
+MOTIF = "\\d+"
 
 
 class MemoryGetter:
@@ -12,7 +12,10 @@ class MemoryGetter:
     def __init__(self):
         self.VM_CGROUP_DIR = "%s%smemory.max" % (S, machine1)
         self.VM_CGROUP_MAX_DIR = "%s%slibvirt/memory.max" % (S, machine1)
-        self.MEM_VM_DIR = "~/Documents/surbooking-experiments/sockets"
+
+    """
+    Return the memory used by the VM in bytes
+    """
 
     """
     Return the memory used by the VM in bytes
