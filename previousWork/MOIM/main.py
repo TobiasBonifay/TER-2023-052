@@ -133,10 +133,11 @@ if __name__ == "__main__":
         f_out.write("")
 
     memorygetter = MemoryGetter()
-    print("Mem proc", memorygetter.get_mem_proc())
-    print("Limit cgroup", memorygetter.get_limit_cgroup())
-    print("Swap used", memorygetter.get_swap_used())
-    print("Mem used", memorygetter.get_mem_used())
+    print("HOST? Mem used GB", memorygetter.get_mem_used() / 1048576)
+    print("HOST? Mem used", memorygetter.get_mem_used())
+    print("HOST? Mem proc", memorygetter.get_mem_proc())
+    print("HOST? Limit cgroup", memorygetter.get_limit_cgroup())
+    print("HOST? Swap used", memorygetter.get_swap_used())
 
     clientMemVm = ClientMemVM()
     print("4", clientMemVm)

@@ -11,27 +11,34 @@ class MemoryGetter:
 
     def __init__(self):
         self.VM_CGROUP_DIR = "%s%smemory.max" % (S, machine1)
-        self.VM_CGROUP_DIR = "%s%smemory.max" % (S, machine1)
         self.VM_CGROUP_MAX_DIR = "%s%slibvirt/memory.max" % (S, machine1)
         self.MEM_VM_DIR = "~/Documents/surbooking-experiments/sockets"
 
+    """
+    Return the memory used by the VM in bytes
+    """
+
     def get_mem_used(self):
-        memtot = memfree = buff = cached = 0
+        total_memory = free_memory = buffered_memory = cached_memory = 0
         with open("/proc/meminfo", "r") as f_meminfo:
             lines = f_meminfo.readlines()
-            for l in lines:
-                if "MemTotal" in l:
-                    memtot = int(re.findall(MOTIF, l)[0])
-                if "MemFree" in l:
-                    memfree = int(re.findall(MOTIF, l)[0])
-                if "Buffers" in l:
-                    buff = int(re.findall(MOTIF, l)[0])
-                if "Cached" in l:
-                    cached = int(re.findall(MOTIF, l)[0])
+            for line in lines:
+                if "MemTotal" in line:
+                    total_memory = int(re.findall(MOTIF, line)[0])
+                if "MemFree" in line:
+                    free_memory = int(re.findall(MOTIF, line)[0])
+                if "Buffers" in line:
+                    buffered_memory = int(re.findall(MOTIF, line)[0])
+                if "Cached" in line:
+                    cached_memory = int(re.findall(MOTIF, line)[0])
 
-        memused = memtot - memfree - buff - cached
+        used_memory = total_memory - free_memory - buffered_memory - cached_memory
 
-        return memused
+        return used_memory
+
+    """
+    Return the swap used by the VM in bytes
+    """
 
     def get_swap_used(self):
         swaptot = swapfree = 0
@@ -45,6 +52,10 @@ class MemoryGetter:
 
         swap_used = swaptot - swapfree
         return swap_used
+
+    """
+    Return the memory used by the VM in bytes
+    """
 
     def get_mem_proc(self):
         mem_proc = 0
