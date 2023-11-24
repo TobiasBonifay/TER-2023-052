@@ -3,6 +3,17 @@ import socket
 HOST = '0.0.0.0'
 PORT = 8000
 
+
+def get_memory_info():
+    """
+    Get memory info from /proc/meminfo file
+    :return: string containing memory info
+    """
+    with open("/proc/meminfo", "r") as file:
+        meminfo = file.read()
+    return meminfo
+
+
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
 server.listen()
@@ -16,6 +27,9 @@ while True:
         data = conn.recv(1024)
         if not data:
             break
-        print(f"Received : {data.decode()}")
-        conn.sendall(b"Response from server")
+
+        print(f"Received: {data.decode()}")
+        mem_info = get_memory_info()
+        conn.sendall(mem_info.encode())
     conn.close()
+    print(f"Disconnected from {addr}")
