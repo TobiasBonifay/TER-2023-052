@@ -36,7 +36,7 @@ class MemoryGetter:
         return used_memory
 
     @staticmethod
-    def get_swap_used(self):
+    def get_swap_used():
         """
         Return the swap used by the VM in bytes
         """
