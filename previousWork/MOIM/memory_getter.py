@@ -13,15 +13,11 @@ class MemoryGetter:
         self.VM_CGROUP_DIR = "%s%smemory.max" % (S, machine1)
         self.VM_CGROUP_MAX_DIR = "%s%slibvirt/memory.max" % (S, machine1)
 
-    """
-    Return the memory used by the VM in bytes
-    """
-
-    """
-    Return the memory used by the VM in bytes
-    """
-
-    def get_mem_used(self):
+    @staticmethod
+    def get_mem_used():
+        """
+        Return the memory used by the VM in bytes
+        """
         total_memory = free_memory = buffered_memory = cached_memory = 0
         with open("/proc/meminfo", "r") as f_meminfo:
             lines = f_meminfo.readlines()
@@ -39,11 +35,11 @@ class MemoryGetter:
 
         return used_memory
 
-    """
-    Return the swap used by the VM in bytes
-    """
-
+    @staticmethod
     def get_swap_used(self):
+        """
+        Return the swap used by the VM in bytes
+        """
         swaptot = swapfree = 0
         with open("/proc/meminfo", "r") as f_meminfo:
             lines = f_meminfo.readlines()
@@ -56,11 +52,10 @@ class MemoryGetter:
         swap_used = swaptot - swapfree
         return swap_used
 
-    """
-    Return the memory used by the VM in bytes
-    """
-
     def get_mem_proc(self):
+        """
+        Return the memory used by the VM in bytes
+        """
         mem_proc = 0
         try:
             with open(self.VM_CGROUP_DIR, 'r') as f_memcurrent:

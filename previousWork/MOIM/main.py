@@ -57,6 +57,7 @@ class Mechanism:
         Thread(target=run_bench).start()
         while self.t < DURATION:
             diff_t = round(time.process_time() - self.t - start_time, 2)
+            print("DEBUG " + str(diff_t) + " >= " + str(FINESSE) + " and " + str(time_reponse) + " > 0")
             if diff_t >= FINESSE and time_reponse > 0:  # we wait for the first value of the benchmark to perform an inference
                 self.t += diff_t
                 self.update_bash()
