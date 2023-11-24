@@ -23,16 +23,15 @@ class Benchmark:
             exit(1)
         else:
             print("Apache benchmark is installed")
-        # check if apache is running
-        if run("systemctl is-active --quiet apache2", stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True).returncode != 0:
-            print("Apache is not running")
-            exit(1)
-        else:
-            print("Apache is running")
+
         # run apache benchmark
         benchmark_cmd = "ab -n 1000 -c 100 http://192.168.100.175:80/"
 
         result = run(benchmark_cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
+        if result.returncode != 0:
+            print("Error while running apache benchmark")
+            exit(1)
+
         for l in result.stdout.splitlines():
             if "(longest request)" in l:
                 res_time = int(re.findall(MOTIF_RE_FLOAT, l)[1])
