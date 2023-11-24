@@ -1,10 +1,13 @@
 import socket
 
-HOST = '192.168.100.75'
-PORT = 80
+HOST = '192.168.100.175'
+PORT = 8000
 
 
 class ClientMemVM:
+    """
+    Client TCP to get memory value from server (serveurTCP.py)
+    """
 
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
