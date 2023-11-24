@@ -1,4 +1,5 @@
 import socket
+import time
 
 HOST = '0.0.0.0'
 PORT = 8000
@@ -30,6 +31,10 @@ while True:
 
         print(f"Received: {data.decode()}")
         mem_info = get_memory_info()
+        print(f"Sending: {mem_info}")
         conn.sendall(mem_info.encode())
+
+        time.sleep(1)
+
     conn.close()
     print(f"Disconnected from {addr}")
