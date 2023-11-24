@@ -5,7 +5,7 @@ from log import Log
 from memory_getter import MemoryGetter
 from client_mem_vm import ClientMemVM
 from apache_benchmark import Benchmark
-from inferance import Inferance
+from inference import Inference
 from colorama import init, Fore, Back, Style
 
 DURATION = 99999
@@ -46,7 +46,7 @@ class Mechanism:
     def __init__(self, memorygetter, clientMemVm):
         self.memorygetter = memorygetter
         self.clientMemVm = clientMemVm
-        self.infer = Inferance()
+        self.infer = Inference()
 
     def run(self):
 
