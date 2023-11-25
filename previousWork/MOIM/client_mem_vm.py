@@ -1,7 +1,9 @@
+import re
 import socket
 
 HOST = '192.168.100.175'
 PORT = 8000
+MOTIF = "\\d+"
 
 
 class ClientMemVM:
@@ -17,20 +19,37 @@ class ClientMemVM:
         message = "I'm client"
         n = self.client.send(message.encode())
         if n != len(message):
-            print('Erreur envoi.')
+            print('Sending error.')
         else:
-            print("Connexion succesfull")
+            print("Connexion successful")
 
     def get_server(self):
         message = "GET"
         n = self.client.send(message.encode())
         if n != len(message):
-            print('Erreur envoi.')
+            print('Sending error.')
 
-    def get_value(self):
+    def get_values(self):
         self.get_server()
-        donnees = self.client.recv(1024)
-        return int(donnees.decode())
+        data = self.client.recv(1024)
+        return data.decode()
+
+    def get_used_memory(self):
+        data = self.get_values()
+        lines = data.splitlines()
+        total_memory = free_memory = buffered_memory = cached_memory = 0
+        # print(lines)
+        for line in lines:
+            if "MemTotal" in line:
+                total_memory = int(re.findall(MOTIF, line)[0])
+            if "MemFree" in line:
+                free_memory = int(re.findall(MOTIF, line)[0])
+            if "Buffers" in line:
+                buffered_memory = int(re.findall(MOTIF, line)[0])
+            if "Cached" in line:
+                cached_memory = int(re.findall(MOTIF, line)[0])
+        used_memory = total_memory - free_memory - buffered_memory - cached_memory
+        return used_memory
 
     def close_client(self):
         self.client.close()

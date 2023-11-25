@@ -21,8 +21,6 @@ class Benchmark:
         if run("which ab", stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True).returncode != 0:
             print("Apache benchmark is not installed")
             exit(1)
-        else:
-            print("Apache benchmark is installed")
 
         # run apache benchmark
         benchmark_cmd = "ab -n 1000 -c 100 http://192.168.100.175:80/"

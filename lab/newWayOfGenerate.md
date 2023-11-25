@@ -32,3 +32,8 @@ sudo systemctl restart networking
 
 
 
+Install apache benchmark
+```bash
+sudo apt install apache2-utils
+```
+

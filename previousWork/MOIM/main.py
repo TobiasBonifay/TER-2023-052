@@ -62,7 +62,7 @@ class Mechanism:
                 print("OK")
                 self.t += diff_t
                 self.update_bash()
-                self.do_inferance()
+                self.do_inference()
                 print(Style.BRIGHT + Fore.GREEN + "[t = {} s]".format(int(self.t)), end="\r")
 
     def add_tr_to_list_tr(self, tr):
@@ -82,7 +82,7 @@ class Mechanism:
         if np.array(self.bash_tmp).shape[0] < 25:
             self.bash_tmp.append([
                 self.memorygetter.get_mem_proc() / 1048576,
-                self.clientMemVm.get_value() / 1024,
+                self.clientMemVm.get_used_memory() / 1024,
                 self.memorygetter.get_limit_cgroup() / 1048576,
                 time_reponse
             ])
@@ -90,9 +90,9 @@ class Mechanism:
             self.bash = self.bash_tmp
             self.bash_tmp = []
 
-    def do_inferance(self):
-        # we do prediction only when we have a new time reponse value
-        # that prevent us to cut lower the cgroup limit too frequently and make a prediction with tr value that are not descriptive of the VM state
+    def do_inference(self):
+        # we do prediction only when we have a new time response value that prevent us to cut lower the cgroup limit
+        # too frequently and make a prediction with tr value that are not descriptive of the VM state
         if self.curr_tr_value != time_reponse and np.array(self.bash).shape[0] == 25:
             self.add_tr_to_list_tr(self.curr_tr_value)
             self.do_predict()
