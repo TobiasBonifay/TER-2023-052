@@ -16,14 +16,14 @@ class Benchmark:
         :return:
         """
         res_time = 0
-        print("Starting apache benchmark")
+
         # check if apache benchmark is installed
         if run("which ab", stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True).returncode != 0:
             print("Apache benchmark is not installed")
             exit(1)
 
         # run apache benchmark
-        benchmark_cmd = "ab -n 1000 -c 100 http://192.168.100.175:80/"
+        benchmark_cmd = "ab -n 100000 -c 500 http://192.168.100.175:80/"
 
         result = run(benchmark_cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
         if result.returncode != 0:
