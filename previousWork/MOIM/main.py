@@ -11,7 +11,6 @@ from apache_benchmark import Benchmark
 from inference import Inference
 from colorama import init, Fore, Back, Style
 
-
 DURATION = 99999
 FINESSE = 0.5
 TIME_RESPONSE = 0
@@ -30,9 +29,21 @@ def run_bench():
     while True:
         time_response = b.start_benchmark()
 
+
 def change_limit_cgroup_file(cgroup_limit):
-    with open(r"/sys/fs/cgroup/machine.slice/machine-qemu\x2d1\x2ddebian12\x2d1.scope/libvirt/memory.max", "w") as fmax:
-        fmax.write(cgroup_limit)
+    """
+    Change the limit of the cgroup in the file /sys/fs/cgroup/machine.slice/machine-qemu\x2d1\x2ddebian12\x2d1.scope/libvirt/memory.max
+    You may need to change the name of the VM in the path
+
+    :param cgroup_limit: new limit of the cgroup
+    :return: None - update the file
+    """
+    try:
+        with open("/sys/fs/cgroup/machine.slice/machine-qemu\x2d1\x2ddebian12\x2d1.scope/libvirt/memory.max",
+                  "w") as fmax:
+            fmax.write(cgroup_limit)
+    except PermissionError:
+        print("Erreur de permission. Exécutez le script avec des privilèges élevés.")
 
 
 def write_output(time, mem_limit, response_time, action):
@@ -188,7 +199,6 @@ if __name__ == "__main__":
 
 cut_value = memory.current * 0.75
 if RNN(cut_value) > THRESHOLD:
-   memory.max *= 1.25
+    memory.max *= 1.25
 else:
-   memory.max = cut_value
-
+    memory.max = cut_value
