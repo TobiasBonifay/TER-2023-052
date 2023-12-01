@@ -1,0 +1,6 @@
+numpy
+colorama
+tensorflow
+psutil
+requests
+scikit-learn
