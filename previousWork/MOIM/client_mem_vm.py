@@ -38,18 +38,19 @@ class ClientMemVM:
         data = self.get_values()
         lines = data.splitlines()
         total_memory = free_memory = buffered_memory = cached_memory = 0
-        # print(lines)
+
         for line in lines:
-            if "MemTotal" in line:
-                total_memory = int(re.findall(MOTIF, line)[0])
-            if "MemFree" in line:
-                free_memory = int(re.findall(MOTIF, line)[0])
-            if "Buffers" in line:
-                buffered_memory = int(re.findall(MOTIF, line)[0])
-            if "Cached" in line:
-                cached_memory = int(re.findall(MOTIF, line)[0])
+            found = re.findall(MOTIF, line)
+            if "MemTotal" in line and found:
+                total_memory = int(found[0])
+            if "MemFree" in line and found:
+                free_memory = int(found[0])
+            if "Buffers" in line and found:
+                buffered_memory = int(found[0])
+            if "Cached" in line and found:
+                cached_memory = int(found[0])
+
         used_memory = total_memory - free_memory - buffered_memory - cached_memory
-        print("CLIENT MEM VM Total memory: " + str(total_memory) + " kB")
         return used_memory
 
     def close_client(self):
