@@ -1,3 +1,4 @@
+import os
 import time
 import numpy as np
 from threading import Thread
@@ -31,12 +32,14 @@ def run_bench():
 
 
 def change_limit_cgroup_file(cgroup_limit):
-    cgroup_file_path = r"/sys/fs/cgroup/machine.slice/machine-qemu-1-debian12-1.scope/libvirt/memory.max"
+    cgroup_file_path = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d2\\x2ddebian12\\x2d1.scope/libvirt/memory.max"
+
     try:
         with open(cgroup_file_path, "w") as fmax:
             fmax.write(cgroup_limit)
     except FileNotFoundError as e:
         print(f"File not found - {e}")
+        exit(1)
     except PermissionError as e:
         print(f"Run the script with administrator privileges - {e}")
 

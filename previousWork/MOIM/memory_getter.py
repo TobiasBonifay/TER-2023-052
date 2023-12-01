@@ -1,17 +1,14 @@
 import re
 
-machine1 = "\\x2d1\\x2ddebian12\\x2d1.scope/"
-machine2 = "\\x2d2\\x2ddebian12\\x2d2.scope/"
 
-S = "/sys/fs/cgroup/machine.slice/machine-qemu"
 MOTIF = "\\d+"
 
 
 class MemoryGetter:
 
     def __init__(self):
-        self.VM_CGROUP_DIR = "%s%smemory.max" % (S, machine1)
-        self.VM_CGROUP_MAX_DIR = "%s%slibvirt/memory.max" % (S, machine1)
+        self.VM_CGROUP_DIR = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d2\\x2ddebian12\\x2d1.scope/memory.max"
+        self.VM_CGROUP_MAX_DIR = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d2\\x2ddebian12\\x2d1.scope/libvirt/memory.max"
 
     @staticmethod
     def get_mem_used():
@@ -81,4 +78,5 @@ class MemoryGetter:
                     limit_cgroup = int(limit)
         except IOError as e:
             print(f"Error reading {self.VM_CGROUP_MAX_DIR}: {e}")
+            exit(1)
         return limit_cgroup
