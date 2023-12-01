@@ -17,6 +17,9 @@ FINESSE = 0.5
 TIME_RESPONSE = 0
 THRESHOLD = 500
 
+DEFAULT_THRESHOLD_1 = 2000
+DEFAULT_THRESHOLD_2 = 2000
+
 b = Benchmark()
 log_ = Log()
 
@@ -26,7 +29,6 @@ def run_bench():
     time_response = 0
     while True:
         time_response = b.start_benchmark()
-
 
 def change_limit_cgroup_file(cgroup_limit):
     with open(r"/sys/fs/cgroup/machine.slice/machine-qemu\x2d1\x2ddebian12\x2d1.scope/libvirt/memory.max", "w") as fmax:
@@ -84,9 +86,15 @@ class Mechanism:
     def get_threshold(self):
         """
         Compute the threshold for the prediction of the next tr value
+
+        if the tr value is NaN, we return the default value
         :return: threshold_1, threshold_2
         """
-        threshold_1, threshold_2 = np.mean(self.tr_list) * self.first_threshold_coefficient, np.mean(self.tr_list) * self.second_threshold_coefficient
+        if self.tr_list.size > 0:
+            threshold_1, threshold_2 = np.mean(self.tr_list) * self.first_threshold_coefficient, np.mean(
+                self.tr_list) * self.second_threshold_coefficient
+        else:
+            threshold_1, threshold_2 = DEFAULT_THRESHOLD_1, DEFAULT_THRESHOLD_2
         log_.debug("Threshold 1 = {} - Threshold 2 = {}".format(threshold_1, threshold_2))
         log_.debug(self.tr_list)
         return threshold_1, threshold_2
@@ -129,24 +137,31 @@ class Mechanism:
 
         threshold_1, threshold_2 = self.get_threshold()
 
+        limit_cgroup = self.memorygetter.get_limit_cgroup()
+        # if the limit cgroup is not set, we set it to the double of the current memory used
+        if self.memorygetter.get_limit_cgroup() == float('inf'):
+            limit_cgroup = self.memorygetter.get_mem_used() * 2
+            change_limit_cgroup_file(str(limit_cgroup))
+            log_.debug("limit_cgroup - " + str(int(limit_cgroup / 1024)) + " kB")
+
         if tr_predict < threshold_1:
-            new_limit = int(self.memorygetter.get_limit_cgroup() * 0.9)
+            new_limit = int(limit_cgroup * 0.9)
             change_limit_cgroup_file(str(new_limit))
-            log_.debug("limit_cgroup - " + str(int(self.memorygetter.get_limit_cgroup() / 1024)) + " kB")
+            log_.debug("limit_cgroup - " + str(int(limit_cgroup / 1024)) + " kB")
             print(Style.BRIGHT + Fore.GREEN + "FREED MEMORY")
-            write_output(round(self.t, 2), int(self.memorygetter.get_limit_cgroup()) / 1048576, time_response, -1)
+            write_output(round(self.t, 2), int(limit_cgroup) / 1048576, time_response, -1)
 
         elif threshold_1 < tr_predict < threshold_2 or self.tr_list.shape[0] < 1:
             print(Fore.YELLOW + "DO NOTHING")
-            write_output(round(self.t, 2), int(self.memorygetter.get_limit_cgroup() / 1048576), time_response, 0)
+            write_output(round(self.t, 2), int(limit_cgroup / 1048576), time_response, 0)
 
         else:
-            new_limit = int(self.memorygetter.get_limit_cgroup() * 2)
+            new_limit = int(limit_cgroup * 2)
             change_limit_cgroup_file(str(new_limit))
-            log_.debug("limit_cgroup - " + str(int(self.memorygetter.get_limit_cgroup() / 1024)) + " kB")
+            log_.debug("limit_cgroup - " + str(int(limit_cgroup / 1024)) + " kB")
 
             print(Style.BRIGHT + Fore.RED + "ADD MEMORY")
-            write_output(round(self.t, 2), int(self.memorygetter.get_limit_cgroup() / 1048576), time_response, 1)
+            write_output(round(self.t, 2), int(limit_cgroup / 1048576), time_response, 1)
 
 
 if __name__ == "__main__":

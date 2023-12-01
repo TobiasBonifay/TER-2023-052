@@ -49,6 +49,7 @@ class ClientMemVM:
             if "Cached" in line:
                 cached_memory = int(re.findall(MOTIF, line)[0])
         used_memory = total_memory - free_memory - buffered_memory - cached_memory
+        print("CLIENT MEM VM Total memory: " + str(total_memory) + " kB")
         return used_memory
 
     def close_client(self):
