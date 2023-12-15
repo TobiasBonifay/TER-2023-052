@@ -32,7 +32,7 @@ def run_bench():
 
 
 def change_limit_cgroup_file(cgroup_limit):
-    cgroup_file_path = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d2\\x2ddebian12\\x2d1.scope/libvirt/memory.max"
+    cgroup_file_path = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d1\\x2ddebian12\\x2d1.scope/libvirt/memory.max"
 
     try:
         with open(cgroup_file_path, "w") as fmax:

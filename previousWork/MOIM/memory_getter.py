@@ -7,8 +7,8 @@ MOTIF = "\\d+"
 class MemoryGetter:
 
     def __init__(self):
-        self.VM_CGROUP_DIR = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d2\\x2ddebian12\\x2d1.scope/memory.max"
-        self.VM_CGROUP_MAX_DIR = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d2\\x2ddebian12\\x2d1.scope/libvirt/memory.max"
+        self.VM_CGROUP_DIR = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d1\\x2ddebian12\\x2d1.scope/memory.max"
+        self.VM_CGROUP_MAX_DIR = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d1\\x2ddebian12\\x2d1.scope/libvirt/memory.max"
 
     @staticmethod
     def get_mem_used():

@@ -2,24 +2,11 @@ import socket
 import time
 
 """
-This TCP server is used to get the memory info from the VM and send it to the client (VM 1)
+This TCP server is in the client (VM2) and is used to communicate with the host (this PC) the response time of the apache server every 45s
 """
 
 HOST = '0.0.0.0'
 PORT = 8000
-
-
-def get_memory_info():
-    """
-    Get memory info from /proc/meminfo file:
-
-    :return: string containing total memory used in bytes
-    """
-    with open("/proc/meminfo", "r") as file:
-        meminfo = file.read()
-
-    return meminfo
-
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
@@ -36,11 +23,11 @@ while True:
             break
 
         print(f"Received: {data.decode()}")
-        mem_info = get_memory_info()
+        mem_info = "ok"  # send response time here
         print(f"Sending: {mem_info}")
         conn.sendall(mem_info.encode())
 
-        time.sleep(0.5)
+        time.sleep(45)
 
     conn.close()
     print(f"Disconnected from {addr}")
