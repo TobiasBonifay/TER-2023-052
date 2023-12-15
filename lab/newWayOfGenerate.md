@@ -31,9 +31,13 @@ sudo systemctl restart networking
 ```
 
 
-
 Install apache benchmark
 ```bash
 sudo apt install apache2-utils
+```
+
+Install python dependencies
+```bash
+pip install -r requirements.txt
 ```
 

@@ -36,7 +36,7 @@ while True:
         print(f"Sending: {mem_info}")
         conn.sendall(mem_info.encode())
 
-        time.sleep(1)
+        time.sleep(0.5)
 
     conn.close()
     print(f"Disconnected from {addr}")
