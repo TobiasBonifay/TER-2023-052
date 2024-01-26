@@ -5,5 +5,5 @@ psutil
 requests
 scikit-learn
 scipy
-sklearn.utils
 matplotlib
+keras
