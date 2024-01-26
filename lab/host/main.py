@@ -9,10 +9,13 @@ VM1_PATH_CGROUP_FILE = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d6\\x2dubun
 VM1_HOST = '192.168.100.175'  # IP of VM1
 VM2_HOST = '192.168.100.231'  # IP of VM2
 VM1_PORT = 8000
-VM2_PORT = 8001
+VM2_PORT = 8000
 DURATION = 99999
 FINESSE = 0.5
 MODEL_PATH = 'saved_model.pb'
+CSV_FILE = 'vm_data.csv'
+DEFAULT_THRESHOLD_1 = 2000
+DEFAULT_THRESHOLD_2 = 2000
 
 
 # Client class to interact with VMs
@@ -72,34 +75,43 @@ def change_cgroup_limit(new_limit):
 
 
 # Main function
-def main(self):
+def main():
     client_vm1 = Client(VM1_HOST, VM1_PORT)
     client_vm2 = Client(VM2_HOST, VM2_PORT)
     model = load_model()
 
-    with open('vm_data.csv', 'w', newline='') as file:
+    with open(CSV_FILE, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)'])
 
-        while self.t < DURATION:
-            mem_vm_view, mem_host_view = parse_memory_info(client_vm1.get_data())
-            response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+        t = 0
+        start_time = time.time()
+        while t < DURATION:
+            current_time = time.time()
+            elapsed_time = current_time - start_time
 
-            writer.writerow([  # Write data to CSV
-                self.t,  # Time
-                self.memorygetter.get_mem_proc() / 1048576,  # Memory (VM view) in MB
-                self.clientMemVm.get_used_memory() / 1024,  # Memory (Host view) in KB
-                response_time,  # CT
-                bw_download,  # BW (Download)
-                bw_upload  # BW (Upload)
-            ])
-            # Model inference and cgroup adjustments
-            data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
-            predicted_value = model.predict(data_for_inference)
-            # Adjust cgroup based on predicted_value
+            if elapsed_time >= FINESSE:
+                t += elapsed_time
+                start_time = current_time
 
+                mem_vm_view = parse_memory_info(client_vm1.get_data())
+                response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
 
-            time.sleep(FINESSE)
+                writer.writerow([t, mem_vm_view, 'Memory_Host_View', response_time, bw_download, bw_upload])
+
+                # Model inference and cgroup adjustments
+                data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
+                predicted_value = model.predict(data_for_inference)
+
+                # Adjust cgroup based on predicted_value (Implement logic based on your requirements)
+                if predicted_value < DEFAULT_THRESHOLD_1:
+                    new_limit = int(mem_vm_view * (1 + FINESSE))
+                    change_cgroup_limit(new_limit)
+                elif DEFAULT_THRESHOLD_1 < predicted_value < DEFAULT_THRESHOLD_2:
+                    pass
+                else:
+                    new_limit = int(mem_vm_view * (1 - FINESSE))
+                    change_cgroup_limit(new_limit)
 
         client_vm1.close()
         client_vm2.close()
