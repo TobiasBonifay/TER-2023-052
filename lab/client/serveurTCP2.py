@@ -2,13 +2,16 @@
 import socket
 import subprocess
 import time
-import pcapy
+from scapy.all import sniff
 from threading import Thread, Lock
 
+from scapy.layers.inet import IP
+
 HOST = '0.0.0.0'
-PORT = 8001
-APACHE_SERVER_IP = '192.168.100.231'
+PORT = 8000
+APACHE_SERVER_IP = '192.168.100.175' # IP of VM1 to target
 INTERFACE = 'virbr10'
+VM2_IP = '192.168.100.231' # itself ip address
 
 
 def run_apache_benchmark():
@@ -25,22 +28,28 @@ def run_apache_benchmark():
 
 
 class BandwidthMonitor:
-    def __init__(self, interface):
+    def __init__(self, interface, vm_ip):
         self.interface = interface
+        self.vm_ip = vm_ip
         self.bw_download = 0
         self.bw_upload = 0
         self.lock = Lock()
         Thread(target=self.monitor_bandwidth).start()
 
-    def monitor_bandwidth(self):
-        pcap = pcapy.open_live(self.interface, 65536, 1, 0)
-        while True:
-            header, packet = pcap.next()
+    def packet_callback(self, packet):
+        if IP in packet:
             packet_length = len(packet)
-            # TODO: Distinguish between download and upload
-            with self.lock:
-                self.bw_download += packet_length
-                self.bw_upload += packet_length
+            if packet[IP].src == self.vm_ip:
+                # Outgoing packet
+                with self.lock:
+                    self.bw_upload += packet_length
+            elif packet[IP].dst == self.vm_ip:
+                # Incoming packet
+                with self.lock:
+                    self.bw_download += packet_length
+
+    def monitor_bandwidth(self):
+        sniff(iface=self.interface, prn=self.packet_callback, store=False)
 
     def get_bandwidth(self):
         with self.lock:
@@ -51,7 +60,7 @@ class BandwidthMonitor:
         return bw_download, bw_upload
 
 
-bw_monitor = BandwidthMonitor(INTERFACE)
+bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
