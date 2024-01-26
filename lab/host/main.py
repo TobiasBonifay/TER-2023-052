@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 # Constants and configurations
+VM1_PATH_CGROUP_FILE = "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d6\\x2dubuntu22.04.scope/memory.max"
 VM1_HOST = '192.168.100.175'  # IP of VM1
 VM2_HOST = '192.168.100.231'  # IP of VM2
 VM1_PORT = 8000
@@ -50,13 +51,28 @@ def parse_memory_info(meminfo):
 def load_model():
     return tf.keras.models.load_model(MODEL_PATH)
 
-# Function to get bandwidth data
-def get_bandwidth_data():
-    # Implement bandwidth monitoring logic here
-    return bw_download, bw_upload
+
+def get_vm2_data(client):
+    data = client.get_data()
+    response_time, bw_download, bw_upload = data.split(',')
+    return float(response_time), int(bw_download), int(bw_upload)
+
+
+def change_cgroup_limit(new_limit):
+    cgroup_file_path = VM1_PATH_CGROUP_FILE
+    try:
+        with open(cgroup_file_path, "w") as f:
+            f.write(str(new_limit))
+    except FileNotFoundError as e:
+        print(f"File not found - {e}")
+        exit(1)
+    except PermissionError as e:
+        print(f"Permission Error - {e}")
+        exit(1)
+
 
 # Main function
-def main():
+def main(self):
     client_vm1 = Client(VM1_HOST, VM1_PORT)
     client_vm2 = Client(VM2_HOST, VM2_PORT)
     model = load_model()
@@ -65,17 +81,20 @@ def main():
         writer = csv.writer(file)
         writer.writerow(['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)'])
 
-        for _ in range(DURATION):
-            current_time = time.time()
+        while self.t < DURATION:
             mem_vm_view, mem_host_view = parse_memory_info(client_vm1.get_data())
-            ct = float(client_vm2.get_data())
-            bw_download, bw_upload = get_bandwidth_data()
+            response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
 
-            # Write data to CSV
-            writer.writerow([current_time, mem_vm_view, mem_host_view, ct, bw_download, bw_upload])
-
+            writer.writerow([  # Write data to CSV
+                self.t,  # Time
+                self.memorygetter.get_mem_proc() / 1048576,  # Memory (VM view) in MB
+                self.clientMemVm.get_used_memory() / 1024,  # Memory (Host view) in KB
+                response_time,  # CT
+                bw_download,  # BW (Download)
+                bw_upload  # BW (Upload)
+            ])
             # Model inference and cgroup adjustments
-            data_for_inference = np.array([[mem_vm_view, ct, bw_download, bw_upload]])
+            data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
             predicted_value = model.predict(data_for_inference)
             # Adjust cgroup based on predicted_value
 
