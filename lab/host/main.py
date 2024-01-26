@@ -1,4 +1,4 @@
-# main.py - Host Script
+import csv
 import socket
 import time
 import numpy as np
@@ -14,6 +14,7 @@ DURATION = 99999
 FINESSE = 0.5
 TIME_RESPONSE = 0
 THRESHOLD = 500
+MODEL_PATH = 'saved_model.pb'
 
 
 class Client:
@@ -32,33 +33,69 @@ class Client:
         self.client.close()
 
 
+def parse_memory_info(meminfo):
+    # Sample implementation - adjust based on your actual meminfo format
+    lines = meminfo.split('\n')
+    mem_total = mem_free = 0
+    for line in lines:
+        if 'MemTotal' in line:
+            mem_total = int(line.split()[1])  # Assuming second column is the value
+        elif 'MemFree' in line:
+            mem_free = int(line.split()[1])
+
+    mem_used = mem_total - mem_free
+    return mem_used
+
+
 def get_vm_memory_usage(client):
     memory_info = client.get_data()
-    # Parse memory info to extract desired metrics
-    # ... parsing logic here ...
+    parsed_memory_info = parse_memory_info(memory_info)
     return parsed_memory_info
 
 
 def get_response_time(client):
-    response_time = client.get_data()
+    response_time = float(client.get_data())
     return response_time
+
+
+def load_model():
+    return tf.keras.models.load_model(MODEL_PATH)
 
 
 def main():
     client_vm1 = Client(VM1_HOST, VM1_PORT)
     client_vm2 = Client(VM2_HOST, VM2_PORT)
+    model = load_model()
 
-    try:
-        for _ in range(DURATION):
-            vm_memory_usage = get_vm_memory_usage(client_vm1)
-            response_time = get_response_time(client_vm2)
-            # Additional logic to process and store data, perform inference, adjust cgroups, etc.
-            # ...
+    with open('vm_data.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)'])
 
-            time.sleep(FINESSE)
-    finally:
-        client_vm1.close()
-        client_vm2.close()
+        try:
+            for _ in range(DURATION):
+                current_time = time.time()  # Epoch time
+
+                vm_memory_usage = get_vm_memory_usage(client_vm1)
+                response_time = get_response_time(client_vm2)
+
+                # Assuming bandwidth data is available, replace these with actual values
+                bw_download = 0  # Placeholder for download bandwidth
+                bw_upload = 0  # Placeholder for upload bandwidth
+
+                # Write data to CSV
+                writer.writerow(
+                    [current_time, vm_memory_usage, 'Memory_Host_View', response_time, bw_download, bw_upload])
+
+                # Prepare data for model inference
+                data_for_inference = np.array([[vm_memory_usage, response_time]])
+                predicted_value = model.predict(data_for_inference)
+
+                # Logic to adjust cgroup based on the prediction
+
+                time.sleep(FINESSE)
+        finally:
+            client_vm1.close()
+            client_vm2.close()
 
 
 if __name__ == "__main__":
