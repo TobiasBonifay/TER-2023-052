@@ -1,5 +1,5 @@
 import socket
-import time
+import subprocess
 
 """
 This TCP server is used to get the memory info from the VM and send it to the client (VM 1)
@@ -10,37 +10,25 @@ PORT = 8000
 
 
 def get_memory_info():
-    """
-    Get memory info from /proc/meminfo file:
-
-    :return: string containing total memory used in bytes
-    """
-    with open("/proc/meminfo", "r") as file:
-        meminfo = file.read()
-
+    meminfo = subprocess.check_output(['cat', '/proc/meminfo']).decode()
     return meminfo
 
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
 server.listen()
-
 print(f"Listening {HOST}:{PORT}")
 
 while True:
     conn, addr = server.accept()
-    print(f"Connected at {addr}")
+    print(f"Connected by {addr}")
+
     while True:
         data = conn.recv(1024)
         if not data:
             break
-
-        print(f"Received: {data.decode()}")
-        mem_info = get_memory_info()
-        print(f"Sending: {mem_info}")
-        conn.sendall(mem_info.encode())
-
-        time.sleep(0.5)
+        response = get_memory_info()
+        conn.sendall(response.encode())
 
     conn.close()
     print(f"Disconnected from {addr}")

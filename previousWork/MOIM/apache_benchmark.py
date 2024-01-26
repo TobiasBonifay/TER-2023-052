@@ -23,11 +23,11 @@ class Benchmark:
             exit(1)
 
         # run apache benchmark
-        benchmark_cmd = "ab -n 1000 -c 1 http://192.168.100.175:80/"
+        benchmark_cmd = "ab -n 1000 -c 1 http://192.168.100.231:80/"
 
         result = run(benchmark_cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
         if result.returncode != 0:
-            print("Error while running apache benchmark")
+            print("Error while running apache benchmark. Check if the VM is running. Check IP address. Error: {}".format(result.stderr))
             exit(1)
 
         for l in result.stdout.splitlines():
