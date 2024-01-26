@@ -1,7 +1,7 @@
 import re
 import socket
 
-HOST = '192.168.100.175'
+HOST = '192.168.100.231'
 PORT = 8000
 MOTIF = "\\d+"
 
