@@ -1,12 +1,15 @@
 import socket
 import subprocess
 
+from lab.config_loader import load_config
+
+config = load_config()
+HOST = config['VM1_HOST']  # was 0.0.0.0
+PORT = config['VM1_PORT']
+
 """
 This TCP server is used to get the memory info from the VM and send it to the client (VM 1)
 """
-
-HOST = '0.0.0.0'
-PORT = 8000
 
 
 def get_memory_info():

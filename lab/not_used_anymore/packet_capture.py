@@ -1,5 +1,6 @@
-import pcapy
 from time import time, sleep
+
+import pcapy
 
 interface = "virbr10"
 pcap = pcapy.open_live(interface, 65536, 1, 0)
