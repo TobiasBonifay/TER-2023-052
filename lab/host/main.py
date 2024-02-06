@@ -1,17 +1,16 @@
 import csv
-import json
 import time
 
 import numpy as np
 
+from lab.config_loader import load_config
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Log import log_runtime_action
 from lab.host.client import Client
 from lab.host.utils import parse_memory_info, load_model
 
 # Load configuration
-with open('config.json', 'r') as f:
-    config = json.load(f)
+config = load_config()
 VM1_PATH_CGROUP_FILE = config["VM1_PATH_CGROUP_FILE"]
 VM1_HOST = config["VM1_HOST"]
 VM1_PORT = config["VM1_PORT"]
