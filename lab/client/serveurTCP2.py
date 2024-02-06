@@ -9,9 +9,9 @@ from scapy.layers.inet import IP
 
 HOST = '0.0.0.0'
 PORT = 8000
-APACHE_SERVER_IP = '192.168.100.175' # IP of VM1 to target
+APACHE_SERVER_IP = '192.168.100.175'  # IP of VM1 to target
 INTERFACE = 'virbr10'
-VM2_IP = '192.168.100.231' # itself ip address
+VM2_IP = '192.168.100.231'  # itself ip address
 
 
 def run_apache_benchmark():

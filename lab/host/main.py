@@ -2,6 +2,7 @@ import csv
 import re
 import socket
 import time
+
 import numpy as np
 import tensorflow as tf
 
@@ -13,10 +14,11 @@ VM1_PORT = 8000
 VM2_PORT = 8000
 DURATION = 99999
 FINESSE = 0.5
-MODEL_PATH = 'saved_model.pb'
+MODEL_PATH = '.'
 CSV_FILE = 'vm_data.csv'
 DEFAULT_THRESHOLD_1 = 2000
 DEFAULT_THRESHOLD_2 = 2000
+MIN_CGROUP_LIMIT = 1000000  # 1GB
 
 
 # Client class to interact with VMs
@@ -38,7 +40,6 @@ class Client:
 
 # Function to parse memory info
 def parse_memory_info(meminfo):
-    # Sample implementation - adjust based on your actual meminfo format
     lines = meminfo.split('\n')
     mem_total = mem_free = mem_buffers = mem_cached = 0
     for line in lines:
@@ -65,12 +66,6 @@ def load_model():
         exit(1)
 
 
-# Function to retrieve memory usage from VM1 (Apache server)
-def get_memory_host_view(client):
-    meminfo = client.get_data()
-    return parse_memory_info(meminfo)
-
-
 def get_vm2_data(client):
     data = client.get_data()
     response_time, bw_download, bw_upload = data.split(',')
@@ -90,7 +85,38 @@ def change_cgroup_limit(new_limit):
         exit(1)
 
 
+def get_cgroup_memory_limit(cgroup_file_path):
+    try:
+        with open(cgroup_file_path, 'r') as file:
+            limit = file.read().strip()
+            if limit == 'max':
+                return float('inf')
+            return int(limit)
+    except IOError as e:
+        print(f"Error reading {cgroup_file_path}: {e}")
+        return None
+
+
+def adjust_cgroup_limit(predicted_value, mem_vm_view):
+    action_taken = None
+    if predicted_value < DEFAULT_THRESHOLD_1:
+        new_limit = max(int(mem_vm_view * (1 + FINESSE)),
+                        MIN_CGROUP_LIMIT)
+        change_cgroup_limit(new_limit)
+        action_taken = "Increase"
+    elif predicted_value >= DEFAULT_THRESHOLD_2:
+        new_limit = max(int(mem_vm_view * (1 - FINESSE)), MIN_CGROUP_LIMIT)
+        change_cgroup_limit(new_limit)
+        action_taken = "Decrease"
+    return action_taken
+
+
 # Main function
+def get_memory_host_view(client_vm1):
+    meminfo = client_vm1.get_data()  # TODO: This needs to be actual host view memory data
+    return parse_memory_info(meminfo)
+
+
 def main():
     client_vm1 = Client(VM1_HOST, VM1_PORT)  # Apache server VM
     client_vm2 = Client(VM2_HOST, VM2_PORT)  # Client VM
@@ -98,7 +124,8 @@ def main():
 
     with open(CSV_FILE, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)'])
+        writer.writerow(
+            ['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)', 'Cgroup Action'])
 
         t = 0
         start_time = time.time()
@@ -111,25 +138,20 @@ def main():
                     t += elapsed_time
                     start_time = current_time
 
+                    # Fetch data from VMs
                     mem_vm_view = parse_memory_info(client_vm1.get_data())
-                    mem_host_view = get_memory_host_view(client_vm1)  # Use the client to get data from Apache server VM
+                    mem_host_view = get_memory_host_view(client_vm1)
                     response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
-
-                    writer.writerow([t, mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
 
                     # Model inference and cgroup adjustments
                     data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
                     predicted_value = model.predict(data_for_inference)
+                    action_taken = adjust_cgroup_limit(predicted_value, mem_vm_view)
 
-                    # Adjust cgroup based on predicted_value
-                    if predicted_value < DEFAULT_THRESHOLD_1:
-                        new_limit = int(mem_vm_view * (1 + FINESSE))
-                        change_cgroup_limit(new_limit)
-                    elif DEFAULT_THRESHOLD_1 < predicted_value < DEFAULT_THRESHOLD_2:
-                        pass  # No change
-                    else:
-                        new_limit = int(mem_vm_view * (1 - FINESSE))
-                        change_cgroup_limit(new_limit)
+                    # Write data to CSV
+                    writer.writerow(
+                        [t, mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
+
             except Exception as e:
                 print(f"An error occurred: {e}")
 
