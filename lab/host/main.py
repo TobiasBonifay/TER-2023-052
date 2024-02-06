@@ -52,7 +52,18 @@ def parse_memory_info(meminfo):
 
 # Function to load TensorFlow model
 def load_model():
-    return tf.keras.models.load_model(MODEL_PATH)
+    try:
+        model = tf.keras.models.load_model(MODEL_PATH)
+        return model
+    except Exception as e:
+        print(f"Failed to load model: {e}")
+        exit(1)
+
+
+# Function to retrieve memory usage from VM1 (Apache server)
+def get_memory_host_view(client):
+    meminfo = client.get_data()
+    return parse_memory_info(meminfo)
 
 
 def get_vm2_data(client):
@@ -76,8 +87,8 @@ def change_cgroup_limit(new_limit):
 
 # Main function
 def main():
-    client_vm1 = Client(VM1_HOST, VM1_PORT)
-    client_vm2 = Client(VM2_HOST, VM2_PORT)
+    client_vm1 = Client(VM1_HOST, VM1_PORT)  # Apache server VM
+    client_vm2 = Client(VM2_HOST, VM2_PORT)  # Client VM
     model = load_model()
 
     with open(CSV_FILE, 'w', newline='') as file:
@@ -87,31 +98,35 @@ def main():
         t = 0
         start_time = time.time()
         while t < DURATION:
-            current_time = time.time()
-            elapsed_time = current_time - start_time
+            try:
+                current_time = time.time()
+                elapsed_time = current_time - start_time
 
-            if elapsed_time >= FINESSE:
-                t += elapsed_time
-                start_time = current_time
+                if elapsed_time >= FINESSE:
+                    t += elapsed_time
+                    start_time = current_time
 
-                mem_vm_view = parse_memory_info(client_vm1.get_data())
-                response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+                    mem_vm_view = parse_memory_info(client_vm1.get_data())
+                    mem_host_view = get_memory_host_view(client_vm1)  # Use the client to get data from Apache server VM
+                    response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
 
-                writer.writerow([t, mem_vm_view, 'Memory_Host_View', response_time, bw_download, bw_upload])
+                    writer.writerow([t, mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
 
-                # Model inference and cgroup adjustments
-                data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
-                predicted_value = model.predict(data_for_inference)
+                    # Model inference and cgroup adjustments
+                    data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
+                    predicted_value = model.predict(data_for_inference)
 
-                # Adjust cgroup based on predicted_value (Implement logic based on your requirements)
-                if predicted_value < DEFAULT_THRESHOLD_1:
-                    new_limit = int(mem_vm_view * (1 + FINESSE))
-                    change_cgroup_limit(new_limit)
-                elif DEFAULT_THRESHOLD_1 < predicted_value < DEFAULT_THRESHOLD_2:
-                    pass
-                else:
-                    new_limit = int(mem_vm_view * (1 - FINESSE))
-                    change_cgroup_limit(new_limit)
+                    # Adjust cgroup based on predicted_value
+                    if predicted_value < DEFAULT_THRESHOLD_1:
+                        new_limit = int(mem_vm_view * (1 + FINESSE))
+                        change_cgroup_limit(new_limit)
+                    elif DEFAULT_THRESHOLD_1 < predicted_value < DEFAULT_THRESHOLD_2:
+                        pass  # No change
+                    else:
+                        new_limit = int(mem_vm_view * (1 - FINESSE))
+                        change_cgroup_limit(new_limit)
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
         client_vm1.close()
         client_vm2.close()
