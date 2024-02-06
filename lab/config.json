@@ -1,0 +1,15 @@
+{
+  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d6\\x2dubuntu22.04.scope",
+  "VM1_HOST": "192.168.100.175",
+  "VM1_PORT": 8000,
+  "VM2_HOST": "192.168.100.231",
+  "VM2_PORT": 8000,
+  "DURATION": 99999,
+  "FINESSE": 0.5,
+  "MODEL_PATH": ".",
+  "CSV_FILE": "vm_data.csv",
+  "RUNTIME_ACTIONS_FILE": "runtime_actions.csv",
+  "THRESHOLD_1": 2000,
+  "THRESHOLD_2": 2000,
+  "MIN_CGROUP_LIMIT": 1000000
+}
