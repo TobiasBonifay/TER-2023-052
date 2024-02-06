@@ -1,4 +1,5 @@
 import csv
+import re
 import socket
 import time
 import numpy as np
@@ -39,14 +40,18 @@ class Client:
 def parse_memory_info(meminfo):
     # Sample implementation - adjust based on your actual meminfo format
     lines = meminfo.split('\n')
-    mem_total = mem_free = 0
+    mem_total = mem_free = mem_buffers = mem_cached = 0
     for line in lines:
         if 'MemTotal' in line:
-            mem_total = int(line.split()[1])  # Assuming second column is the value
+            mem_total = int(re.search(r'\d+', line).group())
         elif 'MemFree' in line:
-            mem_free = int(line.split()[1])
+            mem_free = int(re.search(r'\d+', line).group())
+        elif 'Buffers' in line:
+            mem_buffers = int(re.search(r'\d+', line).group())
+        elif 'Cached' in line:
+            mem_cached = int(re.search(r'\d+', line).group())
 
-    mem_used = mem_total - mem_free
+    mem_used = mem_total - (mem_free + mem_buffers + mem_cached)
     return mem_used
 
 
