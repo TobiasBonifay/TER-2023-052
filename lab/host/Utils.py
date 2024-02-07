@@ -2,7 +2,7 @@ import re
 
 import tensorflow as tf
 
-from lab.host.Main import MODEL_PATH
+from lab.Constants import MODEL_PATH
 
 
 def parse_memory_info(meminfo):

@@ -7,7 +7,7 @@
   "VM2_PORT": 8000,
   "DURATION": 99999,
   "FINESSE": 0.5,
-  "MODEL_PATH": ".",
+  "MODEL_PATH": "/home/tobias/TER-2023-052/lab/host/saved_model.pb",
   "CSV_FILE": "vm_data.csv",
   "RUNTIME_ACTIONS_FILE": "runtime_actions.csv",
   "THRESHOLD_1": 2000,

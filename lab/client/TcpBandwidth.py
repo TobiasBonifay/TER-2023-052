@@ -2,16 +2,8 @@ import socket
 import subprocess
 import time
 
+from lab.Constants import VM2_IP, APACHE_SERVER_IP
 from lab.client.BandwidthMonitor import BandwidthMonitor
-from lab.config_loader import load_config
-
-# Load configuration
-config = load_config()
-HOST = config['VM2_IP']
-PORT = config['VM2_PORT']
-APACHE_SERVER_IP = config['VM1_IP']  # IP of VM1 to target for the benchmark
-INTERFACE = config['INTERFACE']  # Network interface for bandwidth monitoring
-VM2_IP = config['VM2_IP']  # The IP address of this VM
 
 
 def run_apache_benchmark():

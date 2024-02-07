@@ -1,8 +1,4 @@
-from lab.config_loader import load_config
-
-config = load_config()
-FINESSE = config["FINESSE"]
-MIN_CGROUP_LIMIT = config["MIN_CGROUP_LIMIT"]
+from lab.Constants import MIN_CGROUP_LIMIT, FINESSE
 
 
 class CGroupManager:

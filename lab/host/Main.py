@@ -3,27 +3,14 @@ import time
 
 import numpy as np
 
-from lab.config_loader import load_config
+from lab.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, RUNTIME_ACTIONS_FILE, CSV_FILE, DURATION, \
+    VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
 from lab.host.Log import log_runtime_action
 from lab.host.Utils import parse_memory_info, load_model
 
-# Load configuration
-config = load_config()
-HOST_PATH_CGROUP_FILE = config["HOST_PATH_CGROUP_FILE"]
-VM1_PATH_CGROUP_FILE = config["VM1_PATH_CGROUP_FILE"]
-VM1_IP = config["VM1_IP"]
-VM1_PORT = config["VM1_PORT"]
-VM2_IP = config["VM2_IP"]
-VM2_PORT = config["VM2_PORT"]
-DURATION = config["DURATION"]
-FINESSE = config["FINESSE"]
-MODEL_PATH = config["MODEL_PATH"]
-CSV_FILE = config["CSV_FILE"]
-RUNTIME_ACTIONS_FILE = config["RUNTIME_ACTIONS_FILE"]
-MIN_CGROUP_LIMIT = config["MIN_CGROUP_LIMIT"]
-cgroup_manager = CGroupManager(config["VM1_PATH_CGROUP_FILE"], config["THRESHOLD_1"], config["THRESHOLD_2"])
+cgroup_manager = CGroupManager(VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2)
 
 
 def get_vm1_data(client_vm1):

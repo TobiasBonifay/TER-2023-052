@@ -1,6 +1,6 @@
 import csv
 
-from lab.host.Main import RUNTIME_ACTIONS_FILE
+from lab.Constants import RUNTIME_ACTIONS_FILE
 
 
 def log_runtime_action(time, mem_limit, action_taken):
