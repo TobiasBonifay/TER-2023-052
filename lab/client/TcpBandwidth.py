@@ -9,7 +9,7 @@ from lab.config_loader import load_config
 config = load_config()
 HOST = config['VM2_IP']
 PORT = config['VM2_PORT']
-APACHE_SERVER_IP = config['VM1_HOST']  # IP of VM1 to target for the benchmark
+APACHE_SERVER_IP = config['VM1_IP']  # IP of VM1 to target for the benchmark
 INTERFACE = config['INTERFACE']  # Network interface for bandwidth monitoring
 VM2_IP = config['VM2_IP']  # The IP address of this VM
 
