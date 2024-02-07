@@ -1,6 +1,6 @@
-import pcapy
 import time
-from struct import *
+
+import pcapy
 
 dev = "virbr10"
 max_bytes = 65536

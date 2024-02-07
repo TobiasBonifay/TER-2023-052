@@ -11,6 +11,7 @@ from lab.host.Utils import parse_memory_info, load_model
 
 # Load configuration
 config = load_config()
+HOST_PATH_CGROUP_FILE = config["HOST_PATH_CGROUP_FILE"]
 VM1_PATH_CGROUP_FILE = config["VM1_PATH_CGROUP_FILE"]
 VM1_HOST = config["VM1_HOST"]
 VM1_PORT = config["VM1_PORT"]
@@ -64,19 +65,19 @@ def main():
 
                 # Fetch data from VMs
                 mem_vm_view = get_vm1_data(client_vm1)
-                mem_host_view = cgroup_manager.get_cgroup_memory_limit()
+                mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
                 response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
 
                 # Model inference and cgroup adjustments
                 data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
                 predicted_value = model.predict(data_for_inference)
-                action_taken = cgroup_manager.adjust_cgroup_limit(predicted_value, mem_vm_view)
+                action_taken = cgroup_manager.adjust_cgroup_limit_vm(predicted_value, mem_vm_view)
 
                 # Write data to the training log
                 writer.writerow([t, mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
 
                 # Log the runtime action
-                log_runtime_action(t, cgroup_manager.get_cgroup_memory_limit(), action_taken)
+                log_runtime_action(t, cgroup_manager.get_cgroup_memory_limit_vm(), action_taken)
 
         except Exception as e:
             print(f"An error occurred: {e}")

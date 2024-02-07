@@ -100,7 +100,10 @@ Ensure your system supports virtualization and you have sudo or root access.
    Update the IP addresses of each VM to match the IP addresses of the virtual machines. Use `ip a` to find the IP
    addresses of the virtual machines.
 
-   Change the `cgrouppath` to the path of the cgroup of the virtual machines.
+   Change the `cgrouppath` to the path of the cgroup of the virtual machines. Tips to find the cgroup path:
+   ```bash
+      sudo find /sys/fs/cgroup -name "*<VM_NAME>*"
+   ```
 
 8. **On the Host Machine, Start the Client:**
 

@@ -16,7 +16,7 @@ VM2_IP = config['VM2_IP']  # The IP address of this VM
 
 def run_apache_benchmark():
     """Run the Apache benchmark and return the longest request time."""
-    command = f"ab -n 1000 -c 1 http://{APACHE_SERVER_IP}/"
+    command = f"ab -n 100000 -c 500 http://{APACHE_SERVER_IP}/"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode()
