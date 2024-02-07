@@ -5,6 +5,9 @@ from scapy.layers.inet import IP
 
 
 class BandwidthMonitor:
+    """
+    Monitor bandwidth usage on a specific interface and IP address
+    """
     def __init__(self, interface, vm_ip):
         self.interface = interface
         self.vm_ip = vm_ip

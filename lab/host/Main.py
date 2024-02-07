@@ -5,9 +5,9 @@ import numpy as np
 
 from lab.config_loader import load_config
 from lab.host.CGroupManager import CGroupManager
+from lab.host.Client import Client
 from lab.host.Log import log_runtime_action
-from lab.host.client import Client
-from lab.host.utils import parse_memory_info, load_model
+from lab.host.Utils import parse_memory_info, load_model
 
 # Load configuration
 config = load_config()

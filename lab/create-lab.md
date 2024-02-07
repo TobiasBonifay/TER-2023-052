@@ -105,5 +105,5 @@ Ensure your system supports virtualization and you have sudo or root access.
 8. **On the Host Machine, Start the Client:**
 
     ```bash
-    sudo python3 main.py
+    sudo python3 Main.py
     ```

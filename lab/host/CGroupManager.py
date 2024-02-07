@@ -1,4 +1,4 @@
-from lab.host.main import FINESSE, MIN_CGROUP_LIMIT
+from lab.host.Main import FINESSE, MIN_CGROUP_LIMIT
 
 
 class CGroupManager:

@@ -8,7 +8,7 @@ MOTIF = "\\d+"
 
 class ClientMemVM:
     """
-    Client TCP to get memory value from server (serveurTCP.py)
+    Client TCP to get memory value from server (TcpMemProc.py)
     """
 
     def __init__(self):
