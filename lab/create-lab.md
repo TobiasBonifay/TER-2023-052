@@ -105,6 +105,16 @@ Ensure your system supports virtualization and you have sudo or root access.
       sudo find /sys/fs/cgroup -name "*<VM_NAME>*"
    ```
 
+   Run the following command to start the server:
+
+    ```bash
+    sudo python3 -m lab.apache2.TcpMemProc
+    ```
+   and the following command to start the client:
+    ```bash
+    sudo python3 -m lab.client.TcpBandwidth
+    ```
+
 8. **On the Host Machine, Start the Client:**
 
     ```bash
