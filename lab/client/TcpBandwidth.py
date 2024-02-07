@@ -2,7 +2,8 @@ import socket
 import subprocess
 import time
 
-from lab.Constants import VM2_IP, VM1_IP
+from lab.Constants import VM2_IP, VM1_IP, INTERFACE
+from lab.apache2.TcpMemProc import PORT, HOST
 from lab.client.BandwidthMonitor import BandwidthMonitor
 
 
