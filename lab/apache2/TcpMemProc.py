@@ -5,7 +5,7 @@ from lab.config_loader import load_config
 
 # Load configuration for the server
 config = load_config()
-HOST = config['VM1_HOST']  # The host address for the server
+HOST = config['VM1_IP']  # The host address for the server
 PORT = config['VM1_PORT']  # The port the server listens on
 
 

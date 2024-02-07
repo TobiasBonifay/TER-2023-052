@@ -13,9 +13,9 @@ from lab.host.Utils import parse_memory_info, load_model
 config = load_config()
 HOST_PATH_CGROUP_FILE = config["HOST_PATH_CGROUP_FILE"]
 VM1_PATH_CGROUP_FILE = config["VM1_PATH_CGROUP_FILE"]
-VM1_HOST = config["VM1_HOST"]
+VM1_IP = config["VM1_IP"]
 VM1_PORT = config["VM1_PORT"]
-VM2_HOST = config["VM2_HOST"]
+VM2_IP = config["VM2_IP"]
 VM2_PORT = config["VM2_PORT"]
 DURATION = config["DURATION"]
 FINESSE = config["FINESSE"]
@@ -38,8 +38,8 @@ def get_vm2_data(client):
 
 
 def main():
-    client_vm1 = Client(VM1_HOST, VM1_PORT)  # Apache server VM
-    client_vm2 = Client(VM2_HOST, VM2_PORT)  # Client VM
+    client_vm1 = Client(VM1_IP, VM1_PORT)  # Apache server VM
+    client_vm2 = Client(VM2_IP, VM2_PORT)  # Client VM
     model = load_model()
 
     # Initialize the runtime actions log file
