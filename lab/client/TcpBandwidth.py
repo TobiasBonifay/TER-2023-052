@@ -12,11 +12,21 @@ def run_apache_benchmark():
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode()
-        # Parse and return the longest request time from the benchmark result
-        return next((int(line.split()[2]) for line in output.splitlines() if "(longest request)" in line), 0)
+        # Find the line with the longest request
+        for line in output.splitlines():
+            if "(longest request)" in line:
+                parts = line.split()
+                # Ensure that the part we want to convert to an integer is actually a number
+                if parts[2].isdigit():
+                    return int(parts[2])
+        return 0  # Return 0 if the line or number is not found
     except subprocess.CalledProcessError as e:
         print(f"Error while running apache benchmark: {e.stderr.decode()}")
         return 0
+    except ValueError as ve:
+        print(f"Value error encountered: {ve}")
+        return 0
+
 
 
 def run_server(host, port, bandwidth_monitor):
