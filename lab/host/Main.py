@@ -25,9 +25,10 @@ def get_vm2_data(client):
 
 
 def main():
+    # Model is loaded before so if it fails, the program will exit without calling the server
+    model = load_model()  # Load the trained model
     client_vm1 = Client(VM1_IP, VM1_PORT)  # Apache server VM
     client_vm2 = Client(VM2_IP, VM2_PORT)  # Client VM
-    model = load_model()
 
     # Initialize the runtime actions log file
     with open(RUNTIME_ACTIONS_FILE, 'w', newline='') as file:
@@ -57,14 +58,18 @@ def main():
 
                 # Model inference and cgroup adjustments
                 data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
-                predicted_value = model.predict(data_for_inference)
-                action_taken = cgroup_manager.adjust_cgroup_limit_vm(predicted_value, mem_vm_view)
+                # if we generate dataset or model is not trained yet
+                if model is None:
+                    print("Model is not trained yet")
+                    continue
+                else:
+                    predicted_value = model.predict(data_for_inference)
+                    action_taken = cgroup_manager.adjust_cgroup_limit_vm(predicted_value, mem_vm_view)
+                    # Log the runtime action
+                    log_runtime_action(t, cgroup_manager.get_cgroup_memory_limit_vm(), action_taken)
 
                 # Write data to the training log
                 writer.writerow([t, mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
-
-                # Log the runtime action
-                log_runtime_action(t, cgroup_manager.get_cgroup_memory_limit_vm(), action_taken)
 
         except Exception as e:
             print(f"An error occurred: {e}")

@@ -2,13 +2,12 @@ from lab.Constants import MIN_CGROUP_LIMIT, FINESSE
 
 
 class CGroupManager:
-    def __init__(self, vm_path_cgroup_file, hypervisor_path_cgroup_file, threshold_1=2000, threshold_2=2000):
-        self.vm_path_cgroup_file = vm_path_cgroup_file
+    def __init__(self, vm_path_cgroup_file, hypervisor_path_cgroup_file, threshold_1=2000, threshold_2=4000):
+        self.hypervisor_path_cgroup_file = hypervisor_path_cgroup_file + "/memory.current"
         self.vm_cgroup_memory_max = vm_path_cgroup_file + "/memory.max"
         self.vm_cgroup_memory_current = vm_path_cgroup_file + "/memory.current"
         self.threshold_1 = threshold_1
         self.threshold_2 = threshold_2
-        self.hypervisor_path_cgroup_file = hypervisor_path_cgroup_file
 
     def change_cgroup_limit_vm(self, new_limit):
         try:
