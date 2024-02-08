@@ -2,8 +2,7 @@ import socket
 import subprocess
 import time
 
-from lab.client.BandwidthMonitor import BandwidthMonitor
-from lab.common.Constants import VM2_IP, VM1_IP, INTERFACE, VM2_PORT
+from lab.common.Constants import VM2_IP, VM1_IP, VM2_PORT
 
 
 def run_apache_benchmark():
@@ -30,7 +29,7 @@ def run_apache_benchmark():
         return 0
 
 
-def run_server(host, port, bandwidth_monitor):
+def run_server(host, port):
     """Run the TCP server to send bandwidth measurements to the client."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.bind((host, port))
@@ -45,8 +44,7 @@ def run_server(host, port, bandwidth_monitor):
                 try:
                     while True:
                         response_time = run_apache_benchmark()
-                        bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
-                        data_to_send = f"{response_time},{bw_download},{bw_upload}"
+                        data_to_send = f"{response_time}"
                         conn.sendall(data_to_send.encode())
                         time.sleep(45)
                 except BrokenPipeError as e:
@@ -58,10 +56,7 @@ def run_server(host, port, bandwidth_monitor):
                     print(f"Disconnected from {addr}")
         except KeyboardInterrupt:
             print("Server is shutting down.")
-        finally:
-            bandwidth_monitor.close()
 
 
 if __name__ == "__main__":
-    bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
-    run_server(VM2_IP, VM2_PORT, bw_monitor)
+    run_server(VM2_IP, VM2_PORT)

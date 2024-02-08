@@ -4,8 +4,10 @@ import time
 
 import numpy as np
 
+from lab.common import Constants
 from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, DURATION, VM1_PATH_CGROUP_FILE, \
     HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
+from lab.host.BandwidthMonitor import BandwidthMonitor
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
 from lab.host.Utils import parse_memory_info, load_model, get_output_file_name
@@ -24,15 +26,14 @@ def get_vm1_data(client_vm1):
 
 
 def get_vm2_data(client):
-    data = client.get_data()
-    response_time, bw_download, bw_upload = data.split(',')
-    return float(response_time), int(bw_download), int(bw_upload)
+    return float(client.get_data())
 
 
 def generate_dataset(client_vm1, client_vm2, writer):
     mem_vm_view = get_vm1_data(client_vm1)
     mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
-    response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+    response_time = get_vm2_data(client_vm2)
+    bw_download, bw_upload = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP).get_bandwidth()
     print(
         f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}, CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
@@ -41,7 +42,8 @@ def generate_dataset(client_vm1, client_vm2, writer):
 def run_model_and_adjust(client_vm1, client_vm2, model, writer):
     mem_vm_view = get_vm1_data(client_vm1)
     mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
-    response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+    response_time = get_vm2_data(client_vm2)
+    bw_download, bw_upload = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP).get_bandwidth()
     # Run the model
     input_data = np.array([[mem_vm_view, mem_host_view, response_time, bw_download, bw_upload]])
     action = model.predict(input_data)
