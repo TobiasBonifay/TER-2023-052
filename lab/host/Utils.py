@@ -4,19 +4,22 @@ from datetime import datetime
 
 import tensorflow as tf
 
-from lab.common import Constants
 from lab.common.Constants import MODEL_PATH
 
 
 def get_output_file_name():
-    # Ensure the outputs directory exists
-    outputs_dir = os.path.join(os.getcwd(), 'outputs')
+    # Define the base directory where the 'lab' folder is located
+    base_dir = os.path.dirname(__file__)  # __file__ is the path to the current script
+    lab_dir = os.path.join(base_dir, 'lab')  # Path to the 'lab' directory
+
+    # Ensure the 'outputs' directory exists inside the 'lab' directory
+    outputs_dir = os.path.join(lab_dir, 'outputs')
     if not os.path.exists(outputs_dir):
         os.makedirs(outputs_dir)
 
     # Generate the filename with a timestamp
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    csv_filename = f"{Constants.CSV_FILE}_{timestamp}.csv"
+    csv_filename = f"vm_data_{timestamp}.csv"
     csv_filepath = os.path.join(outputs_dir, csv_filename)
     return csv_filepath
 

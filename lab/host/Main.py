@@ -62,6 +62,7 @@ def main():
     client_vm2 = Client(VM2_IP, VM2_PORT)
 
     csv_filename = get_output_file_name()
+    print(f"Output file: {csv_filename}")
 
     try:
         # Initialize the CSV file writer and begin the main loop for data collection or prediction
