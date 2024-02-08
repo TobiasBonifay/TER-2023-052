@@ -2,8 +2,7 @@ import socket
 import subprocess
 import time
 
-from lab.Constants import VM2_IP, VM1_IP, INTERFACE
-from lab.apache2.TcpMemProc import PORT, HOST
+from lab.Constants import VM2_IP, VM1_IP, INTERFACE, VM2_PORT
 from lab.client.BandwidthMonitor import BandwidthMonitor
 
 
@@ -59,4 +58,4 @@ def run_server(host, port, bandwidth_monitor):
 
 if __name__ == "__main__":
     bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
-    run_server(HOST, PORT, bw_monitor)
+    run_server(VM2_IP, VM2_PORT, bw_monitor)
