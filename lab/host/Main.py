@@ -6,11 +6,10 @@ from datetime import datetime
 import numpy as np
 
 from lab.common import Constants
-from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, RUNTIME_ACTIONS_FILE, DURATION, \
+from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, DURATION, \
     VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
-from lab.host.Log import log_runtime_action
 from lab.host.Utils import parse_memory_info, load_model
 
 parser = argparse.ArgumentParser(description='Control operation mode of the script.')
@@ -50,7 +49,8 @@ def run_model_and_adjust(client_vm1, client_vm2, model, writer):
     action = model.predict(input_data)
     # Adjust the cgroup limit
     action_taken = cgroup_manager.adjust_cgroup_limit_vm(action, mem_vm_view)
-    log_runtime_action(RUNTIME_ACTIONS_FILE, time.time(), action_taken)
+    print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}, CT: {response_time}"
+          f", BW (Download): {bw_download}, BW (Upload): {bw_upload}, Action Taken: {action_taken}")
     # Write to CSV
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
 
@@ -64,7 +64,7 @@ def main():
     client_vm2 = Client(VM2_IP, VM2_PORT)
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    csv_filename = f"{Constants.CSV_FILE}_{timestamp}.csv"
+    csv_filename = f"outputs/{Constants.CSV_FILE}_{timestamp}.csv"
 
     try:
         # Initialize the CSV file writer and begin the main loop for data collection or prediction

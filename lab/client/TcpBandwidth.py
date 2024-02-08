@@ -57,5 +57,6 @@ def run_server(host, port, bandwidth_monitor):
 
 
 if __name__ == "__main__":
-    bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
-    run_server(VM2_IP, VM2_PORT, bw_monitor)
+    while True:
+        bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
+        run_server(VM2_IP, VM2_PORT, bw_monitor)
