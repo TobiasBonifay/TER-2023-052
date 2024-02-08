@@ -64,7 +64,7 @@ def main():
     client_vm2 = Client(VM2_IP, VM2_PORT)
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    csv_filename = f"outputs/{Constants.CSV_FILE}_{timestamp}.csv"
+    csv_filename = f"../outputs/{Constants.CSV_FILE}_{timestamp}.csv"
 
     try:
         # Initialize the CSV file writer and begin the main loop for data collection or prediction

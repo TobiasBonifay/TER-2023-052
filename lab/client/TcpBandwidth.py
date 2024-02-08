@@ -49,14 +49,19 @@ def run_server(host, port, bandwidth_monitor):
                         data_to_send = f"{response_time},{bw_download},{bw_upload}"
                         conn.sendall(data_to_send.encode())
                         time.sleep(45)
+                except BrokenPipeError as e:
+                    print(f"Broken pipe error: {e}")
+                    # If the client disconnects, we should continue listening for new connections
+                    continue
                 finally:
                     conn.close()
                     print(f"Disconnected from {addr}")
         except KeyboardInterrupt:
             print("Server is shutting down.")
+        finally:
+            bandwidth_monitor.close()
 
 
 if __name__ == "__main__":
-    while True:
-        bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
-        run_server(VM2_IP, VM2_PORT, bw_monitor)
+    bw_monitor = BandwidthMonitor(INTERFACE, VM2_IP)
+    run_server(VM2_IP, VM2_PORT, bw_monitor)
