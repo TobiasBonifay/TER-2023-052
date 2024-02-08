@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-CSV_FILE = '../vm_data.csv'
+CSV_FILE = 'outputs/vm_data_20240208-143939.csv'
 
 # Load the dataset from CSV
 data = pd.read_csv(CSV_FILE)

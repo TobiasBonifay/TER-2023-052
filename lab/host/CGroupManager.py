@@ -1,4 +1,4 @@
-from lab.Constants import MIN_CGROUP_LIMIT, FINESSE
+from lab.common.Constants import MIN_CGROUP_LIMIT, FINESSE
 
 
 class CGroupManager:

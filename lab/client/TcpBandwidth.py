@@ -2,8 +2,8 @@ import socket
 import subprocess
 import time
 
-from lab.Constants import VM2_IP, VM1_IP, INTERFACE, VM2_PORT
 from lab.client.BandwidthMonitor import BandwidthMonitor
+from lab.common.Constants import VM2_IP, VM1_IP, INTERFACE, VM2_PORT
 
 
 def run_apache_benchmark():

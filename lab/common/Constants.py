@@ -1,4 +1,4 @@
-from lab.config_loader import load_config
+from lab.common.config_loader import load_config
 
 CONFIG = load_config()
 

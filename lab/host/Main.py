@@ -5,8 +5,8 @@ from datetime import datetime
 
 import numpy as np
 
-from lab import Constants
-from lab.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, RUNTIME_ACTIONS_FILE, DURATION, \
+from lab.common import Constants
+from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, RUNTIME_ACTIONS_FILE, DURATION, \
     VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
