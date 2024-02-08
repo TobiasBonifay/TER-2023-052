@@ -20,30 +20,31 @@ args = parser.parse_args()
 cgroup_manager = CGroupManager(VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2)
 
 
-def get_vm1_data(client_vm1):
-    data = client_vm1.get_data()
+def get_vm1_data(apache):
+    data = apache.get_data()
     return parse_memory_info(data)
 
 
 def get_vm2_data(client):
-    return float(client.get_data())
+    data = client.get_data()
+    return float(data)
 
 
-def generate_dataset(client_vm1, client_vm2, writer):
+def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     mem_vm_view = get_vm1_data(client_vm1)
     mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
     response_time = get_vm2_data(client_vm2)
-    bw_download, bw_upload = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP).get_bandwidth()
-    print(
-        f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}, CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
+    bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
+    print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}"
+          f", CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
 
 
-def run_model_and_adjust(client_vm1, client_vm2, model, writer):
+def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monitor):
     mem_vm_view = get_vm1_data(client_vm1)
     mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
     response_time = get_vm2_data(client_vm2)
-    bw_download, bw_upload = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP).get_bandwidth()
+    bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
     # Run the model
     input_data = np.array([[mem_vm_view, mem_host_view, response_time, bw_download, bw_upload]])
     action = model.predict(input_data)
@@ -56,6 +57,8 @@ def run_model_and_adjust(client_vm1, client_vm2, model, writer):
 
 
 def main():
+    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP)
+
     model = None
     if args.mode == 'predict':
         model = load_model()
@@ -87,9 +90,9 @@ def main():
                     record_time = current_time  # Capture the timestamp for consistency
 
                     if args.mode == 'collect':
-                        generate_dataset(client_vm1, client_vm2, writer)
+                        generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor)
                     elif args.mode == 'predict':
-                        run_model_and_adjust(client_vm1, client_vm2, model, writer)
+                        run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monitor)
 
                     file.flush()
 
