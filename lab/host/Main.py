@@ -1,16 +1,14 @@
 import argparse
 import csv
 import time
-from datetime import datetime
 
 import numpy as np
 
-from lab.common import Constants
-from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, DURATION, \
-    VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
+from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, DURATION, VM1_PATH_CGROUP_FILE, \
+    HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
-from lab.host.Utils import parse_memory_info, load_model
+from lab.host.Utils import parse_memory_info, load_model, get_output_file_name
 
 parser = argparse.ArgumentParser(description='Control operation mode of the script.')
 parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
@@ -63,8 +61,7 @@ def main():
     client_vm1 = Client(VM1_IP, VM1_PORT)
     client_vm2 = Client(VM2_IP, VM2_PORT)
 
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    csv_filename = f"../outputs/{Constants.CSV_FILE}_{timestamp}.csv"
+    csv_filename = get_output_file_name()
 
     try:
         # Initialize the CSV file writer and begin the main loop for data collection or prediction
