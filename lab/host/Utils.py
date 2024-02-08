@@ -8,9 +8,11 @@ from lab.common.Constants import MODEL_PATH
 
 
 def get_output_file_name():
-    # Define the base directory where the 'lab' folder is located
-    base_dir = os.path.dirname(__file__)  # __file__ is the path to the current script
-    lab_dir = os.path.join(base_dir, 'lab')  # Path to the 'lab' directory
+    # Get the current file's directory
+    current_dir = os.path.dirname(__file__)
+
+    # Go up one level to the 'lab' directory from 'lab/host'
+    lab_dir = os.path.abspath(os.path.join(current_dir, '..'))
 
     # Ensure the 'outputs' directory exists inside the 'lab' directory
     outputs_dir = os.path.join(lab_dir, 'outputs')
