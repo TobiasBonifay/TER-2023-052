@@ -8,7 +8,7 @@
   "DURATION": 99999,
   "FINESSE": 0.5,
   "MODEL_PATH": "/home/tobias/TER-2023-052/lab/model/",
-  "CSV_FILE": "vm_data.csv",
+  "CSV_FILE": "vm_data",
   "RUNTIME_ACTIONS_FILE": "runtime_actions.csv",
   "THRESHOLD_1": 2000,
   "THRESHOLD_2": 4000,

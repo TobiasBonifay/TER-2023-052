@@ -1,14 +1,22 @@
+import argparse
 import csv
 import time
+from datetime import datetime
 
 import numpy as np
 
-from lab.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, RUNTIME_ACTIONS_FILE, CSV_FILE, DURATION, \
+from lab import Constants
+from lab.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, RUNTIME_ACTIONS_FILE, DURATION, \
     VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
 from lab.host.Log import log_runtime_action
 from lab.host.Utils import parse_memory_info, load_model
+
+parser = argparse.ArgumentParser(description='Control operation mode of the script.')
+parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
+                    help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
+args = parser.parse_args()
 
 cgroup_manager = CGroupManager(VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2)
 
@@ -24,58 +32,72 @@ def get_vm2_data(client):
     return float(response_time), int(bw_download), int(bw_upload)
 
 
+def generate_dataset(client_vm1, client_vm2, writer):
+    mem_vm_view = get_vm1_data(client_vm1)
+    mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
+    response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+    print(
+        f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}, CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
+    writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
+
+
+def run_model_and_adjust(client_vm1, client_vm2, model, writer):
+    mem_vm_view = get_vm1_data(client_vm1)
+    mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
+    response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+    # Run the model
+    input_data = np.array([[mem_vm_view, mem_host_view, response_time, bw_download, bw_upload]])
+    action = model.predict(input_data)
+    # Adjust the cgroup limit
+    action_taken = cgroup_manager.adjust_cgroup_limit_vm(action, mem_vm_view)
+    log_runtime_action(RUNTIME_ACTIONS_FILE, time.time(), action_taken)
+    # Write to CSV
+    writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
+
+
 def main():
-    # Model is loaded before so if it fails, the program will exit without calling the server
-    model = load_model()  # Load the trained model
-    client_vm1 = Client(VM1_IP, VM1_PORT)  # Apache server VM
-    client_vm2 = Client(VM2_IP, VM2_PORT)  # Client VM
+    model = None
+    if args.mode == 'predict':
+        model = load_model()
 
-    # Initialize the runtime actions log file
-    with open(RUNTIME_ACTIONS_FILE, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Time', 'Memory Limit', 'Action Taken'])
+    client_vm1 = Client(VM1_IP, VM1_PORT)
+    client_vm2 = Client(VM2_IP, VM2_PORT)
 
-    # Initialize the training data log file
-    with open(CSV_FILE, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)'])
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    csv_filename = f"{Constants.CSV_FILE}_{timestamp}.csv"
 
-    t = 0
-    start_time = time.time()
-    while t < DURATION:
-        try:
-            current_time = time.time()
-            elapsed_time = current_time - start_time
+    try:
+        # Initialize the CSV file writer and begin the main loop for data collection or prediction
+        with open(csv_filename, 'w', newline='') as file:
+            writer = csv.writer(file)
+            header = ['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)']
+            if args.mode == 'predict':
+                header.append('Action Taken')
+            writer.writerow(header)
 
-            if elapsed_time >= FINESSE:
-                t += elapsed_time
-                start_time = current_time
+            t = 0
+            start_time = time.time()
+            while t < DURATION:
+                current_time = time.time()
+                elapsed_time = current_time - start_time
 
-                # Fetch data from VMs
-                mem_vm_view = get_vm1_data(client_vm1)
-                mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
-                response_time, bw_download, bw_upload = get_vm2_data(client_vm2)
+                if elapsed_time >= FINESSE:
+                    t += elapsed_time
+                    start_time = current_time
+                    record_time = current_time  # Capture the timestamp for consistency
 
-                # Model inference and cgroup adjustments
-                data_for_inference = np.array([[mem_vm_view, response_time, bw_download, bw_upload]])
-                # if we generate dataset or model is not trained yet
-                if model is None:
-                    print("Model is not trained yet")
-                    continue
-                else:
-                    predicted_value = model.predict(data_for_inference)
-                    action_taken = cgroup_manager.adjust_cgroup_limit_vm(predicted_value, mem_vm_view)
-                    # Log the runtime action
-                    log_runtime_action(t, cgroup_manager.get_cgroup_memory_limit_vm(), action_taken)
+                    if args.mode == 'collect':
+                        generate_dataset(client_vm1, client_vm2, writer)
+                    elif args.mode == 'predict':
+                        run_model_and_adjust(client_vm1, client_vm2, model, writer)
 
-                # Write data to the training log
-                writer.writerow([t, mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
+                    file.flush()
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-    client_vm1.close()
-    client_vm2.close()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        client_vm1.close()
+        client_vm2.close()
 
 
 if __name__ == "__main__":
