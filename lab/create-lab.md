@@ -74,7 +74,13 @@ Ensure your system supports virtualization and you have sudo or root access.
     sudo apt install -y apache2
     ```
 
-7. **On Both the Client and Apache Server:**
+7. **On the Client, Install the Apache Benchmark tool:**
+
+   ```bash
+   sudo apt install -y apache2-utils 
+   ```
+
+8. **On Both the Client and Apache Server:**
 
    Install git and clone the repository:
 
@@ -115,7 +121,7 @@ Ensure your system supports virtualization and you have sudo or root access.
     sudo python3 -m lab.client.TcpBandwidth
     ```
 
-8. **On the Host Machine, Start the Client:**
+9. **On the Host Machine, Start the Client:**
 
     ```bash
     sudo python3 Main.py
