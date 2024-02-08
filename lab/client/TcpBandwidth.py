@@ -8,26 +8,27 @@ from lab.client.BandwidthMonitor import BandwidthMonitor
 
 
 def run_apache_benchmark():
-    """Run the Apache benchmark and return the longest request time."""
+    """Run the Apache benchmark and return the mean time per request."""
     command = f"ab -n 100000 -c 500 http://{VM1_IP}/"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode()
-        # Find the line with the longest request
+        # Parse and return the mean time per request from the benchmark result
         for line in output.splitlines():
-            if "(longest request)" in line:
-                parts = line.split()
-                # Ensure that the part we want to convert to an integer is actually a number
-                if parts[2].isdigit():
-                    return int(parts[2])
-        return 0  # Return 0 if the line or number is not found
+            if "Time per request:" in line and "[ms] (mean" in line:
+                # The line format is expected to be: 'Time per request: [time] [ms] (mean, across all concurrent
+                # requests)' Extract the time by splitting by spaces and taking the fourth element
+                mean_time_str = line.split()[3]
+                # Ensure we only process digits and dot for float conversion
+                if all(char.isdigit() or char == '.' for char in mean_time_str):
+                    return float(mean_time_str)
+        return 0  # If not found, return 0
     except subprocess.CalledProcessError as e:
         print(f"Error while running apache benchmark: {e.stderr.decode()}")
         return 0
     except ValueError as ve:
         print(f"Value error encountered: {ve}")
         return 0
-
 
 
 def run_server(host, port, bandwidth_monitor):
