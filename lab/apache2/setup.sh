@@ -1,3 +1,6 @@
+# Script to curl from
+# https://github.com/TobiasBonifay/TER-2023-052/lab/apache2/setup.sh
+
 sudo apt update
 sudo apt install apache2 -y
 sudo systemctl enable apache2
