@@ -1,7 +1,7 @@
 {
   "HOST_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice",
   "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d6\\x2dapache.scope",
-  "VM1_IP": "192.168.100.46",
+  "VM1_IP": "192.168.100.173",
   "VM2_IP": "192.168.100.164",
   "VM1_PORT": 8000,
   "VM2_PORT": 8000,
