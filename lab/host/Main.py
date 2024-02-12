@@ -29,7 +29,7 @@ def get_vm2_data(client):
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     mem_vm_view = get_vm1_data(client_vm1)
     print(f"    1 Memory (VM view): {mem_vm_view / (1024 * 1024)} GB")
-    mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
+    mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
     print(f"    2 Memory (Host view): {mem_host_view / (1024 * 1024 * 1024)} GB")
     response_time = get_vm2_data(client_vm2)
     print(f"    3 CT: {response_time} ms")

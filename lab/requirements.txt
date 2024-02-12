@@ -8,3 +8,5 @@ scipy
 matplotlib
 keras
 pcapy
+pyarrow
+pandas

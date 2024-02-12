@@ -34,7 +34,6 @@ class CGroupManager:
         try:
             with open(self.vm_cgroup_memory_max, 'r') as file:
                 current_limit = file.read().strip()
-                print(f"Current limit: {current_limit}")
                 return int(current_limit)
         except IOError as e:
             print(f"Error reading {self.vm_cgroup_memory_max}: {e}")
@@ -48,7 +47,6 @@ class CGroupManager:
         try:
             with open(self.vm_cgroup_memory_current, 'r') as file:
                 current_usage = file.read().strip()
-                print(f"Current usage: {current_usage}")
                 return int(current_usage)
         except IOError as e:
             print(f"Error reading {self.vm_cgroup_memory_current}: {e}")
