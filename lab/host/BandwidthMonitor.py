@@ -46,3 +46,6 @@ class BandwidthMonitor:
             self.bw_download = 0
             self.bw_upload = 0
         return bw_download, bw_upload
+
+    def stop(self):
+        self.thread.join()

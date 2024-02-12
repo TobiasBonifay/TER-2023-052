@@ -10,12 +10,8 @@ from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, DU
 from lab.host.BandwidthMonitor import BandwidthMonitor
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
+from lab.host.ScenarioManager import ScenarioManager
 from lab.host.Utils import parse_memory_info, load_model, get_output_file_name
-
-parser = argparse.ArgumentParser(description='Control operation mode of the script.')
-parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
-                    help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
-args = parser.parse_args()
 
 cgroup_manager = CGroupManager(VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2)
 
@@ -56,7 +52,36 @@ def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monito
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
 
 
+def scenario_callback(action, scenario_index):
+    global writer, csv_file
+    if action == 'start':
+        print(f"Starting scenario {scenario_index}")
+    elif action == 'end':
+        print(f"Ending scenario {scenario_index}")
+        csv_file.close()
+
+
 def main():
+    parser = argparse.ArgumentParser(description='Control operation mode of the script.')
+    parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
+                        help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
+    args = parser.parse_args()
+
+    scenarios = [(1500000000, 180),  # 1.5GB limit for 180 seconds
+                 (1200000000, 180),  # 1.2GB limit for 180 seconds
+                 (1000000000, 180),  # 1GB limit for 180 seconds
+                 (900000000, 180),  # 900MB limit for 180 seconds
+                 (800000000, 180),  # 800MB limit for 180 seconds
+                 (700000000, 180),  # 700MB limit for 180 seconds
+                 (600000000, 180),  # 600MB limit for 180 seconds
+                 (500000000, 180),  # 500MB limit for 180 seconds
+                 (400000000, 180),  # 400MB limit for 180 seconds
+                 (300000000, 180),  # 300MB limit for 180 seconds
+                 (200000000, 180)]  # 200MB limit for 180 seconds
+
+    scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
+    scenario_manager.start()  # Start scenario management in a separate thread
+
     bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP)
 
     model = None
@@ -99,6 +124,7 @@ def main():
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
+        bandwidth_monitor.stop()
         client_vm1.close()
         client_vm2.close()
 

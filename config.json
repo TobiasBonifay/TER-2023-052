@@ -1,6 +1,6 @@
 {
   "HOST_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice",
-  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\\\x2d6\\\\x2dapache.scope",
+  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d6\\x2dapache.scope",
   "VM1_IP": "192.168.100.46",
   "VM2_IP": "192.168.100.164",
   "VM1_PORT": 8000,
@@ -12,6 +12,6 @@
   "RUNTIME_ACTIONS_FILE": "runtime_actions.csv",
   "THRESHOLD_1": 2000,
   "THRESHOLD_2": 4000,
-  "MIN_CGROUP_LIMIT": 1000000,
+  "MIN_CGROUP_LIMIT": 300000,
   "INTERFACE": "virbr0"
 }
