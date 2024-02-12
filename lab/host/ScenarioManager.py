@@ -15,13 +15,14 @@ class ScenarioManager:
         self.thread.start()
 
     def run_scenarios(self):
+        scenario_count = len(self.scenarios)
         for i, (limit, duration) in enumerate(self.scenarios):
             if self.stop_event.is_set():
                 break
-            self.callback('start', i)
+            self.callback('start', i, scenario_count)
             self.cgroup_manager.change_cgroup_limit_vm(limit)
             time.sleep(duration)
-            self.callback('end', i)
+            self.callback('end', i, scenario_count)
 
     def stop(self):
         self.stop_event.set()

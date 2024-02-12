@@ -28,12 +28,17 @@ def get_vm2_data(client):
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     mem_vm_view = get_vm1_data(client_vm1)
+    print(f"    1 Memory (VM view): {mem_vm_view / (1024 * 1024)} GB")
     mem_host_view = cgroup_manager.get_cgroup_memory_limit_host()
+    print(f"    2 Memory (Host view): {mem_host_view / (1024 * 1024 * 1024)} GB")
     response_time = get_vm2_data(client_vm2)
+    print(f"    3 CT: {response_time} ms")
     bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
-    print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}"
-          f", CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
+    print(f"    4 BW (Download): {bw_download / (1024 * 1024)} MB/s, BW (Upload): {bw_upload / (1024 * 1024)} MB/s")
+    # print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}"
+    #      f", CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
+    print("Data written to CSV.")
 
 
 def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monitor):
@@ -52,13 +57,14 @@ def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monito
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
 
 
-def scenario_callback(action, scenario_index):
-    global writer, csv_file
+def scenario_callback(action, scenario_index, num_scenarios):
     if action == 'start':
         print(f"Starting scenario {scenario_index}")
     elif action == 'end':
         print(f"Ending scenario {scenario_index}")
-        csv_file.close()
+    if scenario_index == num_scenarios:
+        print("All scenarios completed.")
+        return True
 
 
 def main():
@@ -67,17 +73,17 @@ def main():
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
 
-    scenarios = [(1500000000, 180),  # 1.5GB limit for 180 seconds
-                 (1200000000, 180),  # 1.2GB limit for 180 seconds
-                 (1000000000, 180),  # 1GB limit for 180 seconds
-                 (900000000, 180),  # 900MB limit for 180 seconds
-                 (800000000, 180),  # 800MB limit for 180 seconds
-                 (700000000, 180),  # 700MB limit for 180 seconds
-                 (600000000, 180),  # 600MB limit for 180 seconds
-                 (500000000, 180),  # 500MB limit for 180 seconds
-                 (400000000, 180),  # 400MB limit for 180 seconds
-                 (300000000, 180),  # 300MB limit for 180 seconds
-                 (200000000, 180)]  # 200MB limit for 180 seconds
+    scenarios = [(1500000000, 360),  # 1.5GB limit for 360 seconds
+                 (1200000000, 360),  # 1.2GB limit for 360 seconds
+                 (1000000000, 360),  # 1GB limit for 360 seconds
+                 (900000000, 360),  # 900MB limit for 360 seconds
+                 (800000000, 360),  # 800MB limit for 360 seconds
+                 (700000000, 360),  # 700MB limit for 360 seconds
+                 (600000000, 360),  # 600MB limit for 360 seconds
+                 (500000000, 360),  # 500MB limit for 360 seconds
+                 (400000000, 360),  # 400MB limit for 360 seconds
+                 (300000000, 360),  # 300MB limit for 360 seconds
+                 (200000000, 360)]  # 200MB limit for 360 seconds
 
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
@@ -113,10 +119,13 @@ def main():
                     t += elapsed_time
                     start_time = current_time
                     record_time = current_time  # Capture the timestamp for consistency
+                    print(f"Record time: {record_time}")
 
                     if args.mode == 'collect':
+                        print("Generating dataset...")
                         generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor)
                     elif args.mode == 'predict':
+                        print("Running model and adjusting cgroup...")
                         run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monitor)
 
                     file.flush()
