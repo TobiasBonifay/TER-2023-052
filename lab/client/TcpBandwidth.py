@@ -2,6 +2,7 @@ import socket
 import subprocess
 import time
 
+from lab.common import Constants
 from lab.common.Constants import VM2_IP, VM1_IP, VM2_PORT
 
 
@@ -46,7 +47,7 @@ def run_server(host, port):
                         response_time = run_apache_benchmark()
                         data_to_send = f"{response_time}"
                         conn.sendall(data_to_send.encode())
-                        time.sleep(45)
+                        time.sleep(Constants.SLEEP_APACHE_BENCHMARK)
                 except BrokenPipeError as e:
                     print(f"Broken pipe error: {e}")
                     # If the client disconnects, we should continue listening for new connections
