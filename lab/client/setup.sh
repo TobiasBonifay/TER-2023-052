@@ -1,5 +1,6 @@
-# Script to curl from
-# https://github.com/TobiasBonifay/TER-2023-052/lab/client/setup.sh
+#!/bin/bash
+# Script to wget from
+# https://github.com/TobiasBonifay/TER-2023-052/blob/main/lab/client/setup.sh
 
 sudo apt update
 sudo apt install apache2-utils -y
