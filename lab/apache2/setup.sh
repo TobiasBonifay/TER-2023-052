@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script to wget from
-# https://github.com/TobiasBonifay/TER-2023-052/blob/main/lab/apache2/setup.sh
+# https://raw.githubusercontent.com/TobiasBonifay/TER-2023-052/main/lab/apache2/setup.sh
 
 sudo apt update
 sudo apt install apache2 -y
