@@ -8,6 +8,7 @@ class CGroupManager:
         self.vm_cgroup_memory_max = os.path.join(vm_path_cgroup_file, "memory.max")
         self.vm_cgroup_memory_current = os.path.join(vm_path_cgroup_file, "memory.current")
         self.hypervisor_path_cgroup_file = os.path.join(hypervisor_path_cgroup_file, "memory.current")
+        self.hypervisor_path_cgroup_file_swap = os.path.join(hypervisor_path_cgroup_file, "memory.swap.current")
         self.threshold_1 = threshold_1
         self.threshold_2 = threshold_2
 
@@ -84,3 +85,12 @@ class CGroupManager:
             return 1
         else:
             return 0
+
+    def get_swap_used_hostview(self):
+        try:
+            with open(self.hypervisor_path_cgroup_file_swap, 'r') as file:
+                current_swap = file.read().strip()
+                return int(current_swap)
+        except IOError as e:
+            print(f"Error reading {self.hypervisor_path_cgroup_file_swap}: {e}")
+            return None

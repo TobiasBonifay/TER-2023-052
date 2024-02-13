@@ -31,13 +31,15 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     print(f"    1 Memory (VM view): {mem_vm_view / (1024 * 1024)} GB")
     mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
     print(f"    2 Memory (Host view): {mem_host_view / (1024 * 1024 * 1024)} GB")
+    mem_swap = cgroup_manager.get_swap_used_hostview()
     response_time = get_vm2_data(client_vm2)
+    print(f"    2.5 Swap: {mem_swap / (1024 * 1024)} MB")
     print(f"    3 CT: {response_time} ms")
     bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
     print(f"    4 BW (Download): {bw_download / (1024 * 1024)} MB/s, BW (Upload): {bw_upload / (1024 * 1024)} MB/s")
     # print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}"
     #      f", CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
-    writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload])
+    writer.writerow([time.time(), mem_vm_view, mem_host_view, mem_swap, response_time, bw_download, bw_upload])
     print("Data written to CSV.")
 
 
@@ -73,18 +75,18 @@ def main():
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
 
-    scenarios = [  # (1500000000, 75),  # 1.5GB limit for 75 seconds
-        # (1200000000, 75),  # 1.2GB limit for 75 seconds
-        # (1000000000, 75),  # 1GB limit for 75 seconds
-        # (900000000, 75),  # 900MB limit for 75 seconds
-        (800000000, 75),  # 800MB limit for 75 seconds
-        # (700000000, 75),  # 700MB limit for 75 seconds
-        (600000000, 75),  # 750MB limit for 75 seconds
-        # (500000000, 75),  # 500MB limit for 75 seconds
-        (400000000, 75),  # 400MB limit for 75 seconds
-        # (300000000, 75),  # 300MB limit for 75 seconds
-        (200000000, 75),  # 200MB limit for 75 seconds
-                 (2000000000, 1)]  # reset
+    scenarios = [  # (1200000000, 75),  # 1.2GB limit for 75 seconds
+        (999997440, 80),  # 1GB limit for 90 seconds
+        # (900000000, 80),  # 900MB limit for 90 seconds
+        (799997952, 80),  # 800MB limit for 90 seconds
+        # (700000000, 80),  # 700MB limit for 90 seconds
+        (599998464, 80),  # 600MB limit for 90 seconds
+        # (500000000, 80),  # 500MB limit for 90 seconds
+        (399998976, 80),  # 400MB limit for 90 seconds
+        (299999232, 80),  # 300MB limit for 90 seconds
+        (199999488, 80),  # 200MB limit for 90 seconds
+        (99999744, 80),  # 100MB limit for 90 seconds
+        (2000000000, 1)]  # reset
 
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
@@ -105,7 +107,8 @@ def main():
         # Initialize the CSV file writer and begin the main loop for data collection or prediction
         with open(csv_filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            header = ['Time', 'Memory (VM view)', 'Memory (Host view)', 'CT', 'BW (Download)', 'BW (Upload)']
+            header = ['Time', 'Memory (VM view)', 'Memory (Host view)', 'Swap used (Host view)', 'CT', 'BW (Download)',
+                      'BW (Upload)']
             if args.mode == 'predict':
                 header.append('Action Taken')
             writer.writerow(header)

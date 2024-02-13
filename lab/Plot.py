@@ -20,32 +20,27 @@ data = pd.read_csv(CSV_FILE)
 # Convert the 'Time' column to datetime for better plotting
 data['Time'] = pd.to_datetime(data['Time'], unit='s')
 
-# Plotting
-plt.figure(figsize=(12, 15))
+# Setting up the subplots
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 15))
 
-# Plot download bandwidth
-plt.plot(data['Time'], data['BW (Download)'] * 10, label='Download Bandwidth', color='blue')
+# First plot for bandwidth
+ax1.plot(data['Time'], data['BW (Download)'], label='Download Bandwidth', color='blue')
+ax1.plot(data['Time'], data['BW (Upload)'], label='Upload Bandwidth', color='red')
+ax1.set_xlabel('Time')
+ax1.set_ylabel('Bandwidth (bytes)')
+ax1.set_title('Bandwidth Usage Over Time')
+ax1.legend()
+ax1.grid(True)
 
-# Plot upload bandwidth
-plt.plot(data['Time'], data['BW (Upload)'] * 100, label='Upload Bandwidth', color='red')
+# Second plot for memory usage
+ax2.plot(data['Time'], data['Memory (VM view)'], label='Memory Usage (VM view)', color='green')
+ax2.plot(data['Time'], data['Memory (Host view)'] / 1000, label='Memory Limit (Host view)', color='orange')
+ax2.set_xlabel('Time')
+ax2.set_ylabel('Memory (bytes)')
+ax2.set_title('Memory Usage Over Time')
+ax2.legend()
+ax2.grid(True)
 
-# Plot memory usage
-plt.plot(data['Time'], data['Memory (VM view)'] * 100, label='Memory Usage (VM view)', color='green')
-
-# Plot memory limit
-plt.plot(data['Time'], data['Memory (Host view)'], label='Memory Limit (Host view)', color='orange')
-
-# Plot response time
-plt.plot(data['Time'], data['CT'] * 1000 * 1000, label='Response Time', color='purple')
-
-plt.grid(True)
-
-# Add some labels and a legend
-plt.xlabel('Time')
-plt.ylabel('Bandwidth (bytes)')
-plt.title('Bandwidth Usage Over Time')
-plt.legend()
-
-# Show the plot
+# Show the plots
 plt.tight_layout()
 plt.show()
