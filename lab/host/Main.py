@@ -14,6 +14,7 @@ from lab.host.ScenarioManager import ScenarioManager
 from lab.host.Utils import parse_memory_info, load_model, get_output_file_name
 
 cgroup_manager = CGroupManager(VM1_PATH_CGROUP_FILE, HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2)
+global continue_running
 
 
 def get_vm1_data(apache):
@@ -43,7 +44,7 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     writer.writerow(
         [time.time(), current_cgroup_limit, mem_vm_view, mem_host_view, mem_swap, response_time, bw_download,
          bw_upload])
-    print("Data written to CSV.")
+    print("     Data written to CSV.")
 
 
 def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monitor):
@@ -62,33 +63,46 @@ def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monito
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
 
 
-def scenario_callback(action, scenario_index, num_scenarios):
+def scenario_callback(action, scenario_index):
+    global continue_running
     if action == 'start':
         print(f"Starting scenario {scenario_index}")
     elif action == 'end':
         print(f"Ending scenario {scenario_index}")
-    if scenario_index == num_scenarios:
-        print("All scenarios completed.")
-        exit(0)
+    elif action == 'complete':
+        print("All scenarios completed")
+        continue_running = False
 
 
 def main():
+    global continue_running
+    continue_running = True
+
     parser = argparse.ArgumentParser(description='Control operation mode of the script.')
     parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
 
     scenarios = [  # (1200000000, 75),  # 1.2GB limit for 75 seconds
-        (999997440, 80),  # 1GB limit for 90 seconds
-        # (900000000, 80),  # 900MB limit for 90 seconds
-        (799997952, 80),  # 800MB limit for 90 seconds
-        # (700000000, 80),  # 700MB limit for 90 seconds
-        (599998464, 80),  # 600MB limit for 90 seconds
-        # (500000000, 80),  # 500MB limit for 90 seconds
-        (399998976, 80),  # 400MB limit for 90 seconds
-        (299999232, 80),  # 300MB limit for 90 seconds
-        (199999488, 80),  # 200MB limit for 90 seconds
-        (10807681024, 1)]  # reset
+        (999997440, 180),  # 1GB limit for 180 seconds
+        (799997952, 180),  # 800MB limit for 180 seconds
+        (599998464, 180),  # 600MB limit for 180 seconds
+        (399998976, 180),  # 400MB limit for 180 seconds
+        (299999232, 180),  # 300MB limit for 180 seconds
+        (199999488, 180),  # 200MB limit for 180 seconds
+        (299999232, 180),  # 300MB limit for 180 seconds
+        (399998976, 180),  # 400MB limit for 180 seconds
+        (599998464, 180),  # 600MB limit for 180 seconds
+        (799997952, 180),  # 800MB limit for 180 seconds
+        (599998464, 60),  # 600MB limit for 60 seconds
+        (399998976, 60),  # 400MB limit for 60 seconds
+        (299999232, 60),  # 300MB limit for 60 seconds
+        (199999488, 60),  # 200MB limit for 60 seconds
+        (299999232, 60),  # 300MB limit for 60 seconds
+        (399998976, 60),  # 400MB limit for 60 seconds
+        (599998464, 60),  # 600MB limit for 60 seconds
+        (799997952, 60),  # 800MB limit for 60 seconds
+        (999997440, 60)]  # 1GB limit for 60 seconds
 
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
@@ -119,7 +133,7 @@ def main():
 
             t = 0
             start_time = time.time()
-            while t < DURATION:
+            while t < DURATION and continue_running:
                 current_time = time.time()
                 elapsed_time = current_time - start_time
 
@@ -135,13 +149,12 @@ def main():
                         run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monitor)
 
                     file.flush()
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
     finally:
+        scenario_manager.stop()
         bandwidth_monitor.stop()
         client_vm1.close()
         client_vm2.close()
+        print("Script terminated.")
 
 
 if __name__ == "__main__":

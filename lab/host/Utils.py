@@ -44,7 +44,7 @@ def parse_memory_info(meminfo):
         elif 'Cached' in line:
             mem_cached = int(re.search(r'\d+', line).group())
 
-    mem_used = mem_total - (mem_free + mem_buffers + mem_cached)
+    mem_used = mem_total - mem_free
     return mem_used
 
 

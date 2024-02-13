@@ -10,6 +10,7 @@ class BandwidthMonitor:
     """
 
     def __init__(self, interface, vm_ip):
+        self.should_stop = False
         self.interface = interface
         self.vm_ip = vm_ip
         self.bw_download = 0
@@ -34,10 +35,11 @@ class BandwidthMonitor:
             print(f"Error processing packet: {e}")
 
     def monitor_bandwidth(self):
-        try:
-            sniff(iface=self.interface, prn=self.packet_callback, store=False)
-        except Exception as e:
-            print(f"Error monitoring bandwidth: {e}")
+        while not self.should_stop:
+            try:
+                sniff(iface=self.interface, prn=self.packet_callback, store=False)
+            except Exception as e:
+                print(f"Error monitoring bandwidth: {e}")
 
     def get_bandwidth(self):
         with self.lock:
@@ -48,4 +50,5 @@ class BandwidthMonitor:
         return bw_download, bw_upload
 
     def stop(self):
+        self.should_stop = True
         self.thread.join()
