@@ -27,6 +27,7 @@ def get_vm2_data(client):
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
+    current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
     mem_vm_view = get_vm1_data(client_vm1)
     print(f"    1 Memory (VM view): {mem_vm_view / (1024 * 1024)} GB")
     mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
@@ -39,7 +40,9 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     print(f"    4 BW (Download): {bw_download / (1024 * 1024)} MB/s, BW (Upload): {bw_upload / (1024 * 1024)} MB/s")
     # print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}"
     #      f", CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
-    writer.writerow([time.time(), mem_vm_view, mem_host_view, mem_swap, response_time, bw_download, bw_upload])
+    writer.writerow(
+        [time.time(), current_cgroup_limit, mem_vm_view, mem_host_view, mem_swap, response_time, bw_download,
+         bw_upload])
     print("Data written to CSV.")
 
 
@@ -66,7 +69,7 @@ def scenario_callback(action, scenario_index, num_scenarios):
         print(f"Ending scenario {scenario_index}")
     if scenario_index == num_scenarios:
         print("All scenarios completed.")
-        return True
+        exit(0)
 
 
 def main():
@@ -85,8 +88,7 @@ def main():
         (399998976, 80),  # 400MB limit for 90 seconds
         (299999232, 80),  # 300MB limit for 90 seconds
         (199999488, 80),  # 200MB limit for 90 seconds
-        (99999744, 80),  # 100MB limit for 90 seconds
-        (2000000000, 1)]  # reset
+        (10807681024, 1)]  # reset
 
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
@@ -111,6 +113,8 @@ def main():
                       'BW (Upload)']
             if args.mode == 'predict':
                 header.append('Action Taken')
+            if args.mode == 'collect':
+                header.insert(1, 'Memory Limit')
             writer.writerow(header)
 
             t = 0

@@ -36,6 +36,7 @@ class CGroupManager:
             with open(self.vm_cgroup_memory_max, 'r') as file:
                 current_limit = file.read().strip()
                 if current_limit == "max":
+                    print("Max limit found.")
                     return self.get_cgroup_memory_limit_host()
                 return int(current_limit)
         except IOError as e:

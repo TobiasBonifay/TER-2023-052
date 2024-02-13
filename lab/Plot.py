@@ -21,12 +21,12 @@ data = pd.read_csv(CSV_FILE)
 data['Time'] = pd.to_datetime(data['Time'], unit='s')
 
 # Setting up the subplots
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 15))
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
 
 # First plot for bandwidth
 MEGA = 1024 * 1024
 ax1.plot(data['Time'], data['BW (Download)'] / MEGA, label='Download Bandwidth', color='blue')
-ax1.plot(data['Time'], data['BW (Upload)'] / MEGA, label='Upload Bandwidth', color='red')
+ax1.plot(data['Time'], data['BW (Upload)'] * 10 / MEGA, label='Upload Bandwidth x10', color='red')
 ax1.set_xlabel('Time')
 ax1.set_ylabel('Bandwidth (Mo/s)')
 ax1.set_title('Bandwidth Usage Over Time')
@@ -34,14 +34,24 @@ ax1.legend()
 ax1.grid(True)
 
 # Second plot for memory usage
-ax2.plot(data['Time'], data['Memory (VM view)'] / MEGA, label='Memory Usage (VM view)', color='green')
+ax2.plot(data['Time'], data['Memory Limit'] / MEGA, label='Cgroup cut', color='blue')
+ax2.plot(data['Time'], data['Memory (VM view)'] / 1024, label='Memory Usage (VM view)', color='green')
 ax2.plot(data['Time'], data['Memory (Host view)'] / MEGA, label='Memory Limit (Host view)', color='orange')
-ax2.plot(data['Time'], data['Swap used (Host view)'] / (MEGA * 10), label='Swap Usage / 10', color='red')
+ax2.plot(data['Time'], data['Swap used (Host view)'] / MEGA, label='Swap Usage', color='red')
 ax2.set_xlabel('Time')
 ax2.set_ylabel('Memory (Mo)')
 ax2.set_title('Memory Usage Over Time')
 ax2.legend()
 ax2.grid(True)
+
+# Third plot for response time
+ax3.plot(data['Time'], data['CT'], label='Response Time', color='blue')
+ax3.set_xlabel('Time')
+ax3.set_ylabel('Response Time (ms)')
+ax3.set_title('Response Time Over Time')
+ax3.legend()
+ax3.grid(True)
+
 
 # Show the plots
 plt.show()
