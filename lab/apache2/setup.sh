@@ -18,6 +18,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # ip a and wait user to choose the interface and edit the config.json
+# change the cgroup path to the correct one
 ip a
 nano config.json
 

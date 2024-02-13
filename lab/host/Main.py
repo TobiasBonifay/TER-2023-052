@@ -73,17 +73,18 @@ def main():
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
 
-    scenarios = [(1500000000, 360),  # 1.5GB limit for 360 seconds
-                 (1200000000, 360),  # 1.2GB limit for 360 seconds
-                 (1000000000, 360),  # 1GB limit for 360 seconds
-                 (900000000, 360),  # 900MB limit for 360 seconds
-                 (800000000, 360),  # 800MB limit for 360 seconds
-                 (700000000, 360),  # 700MB limit for 360 seconds
-                 (600000000, 360),  # 600MB limit for 360 seconds
-                 (500000000, 360),  # 500MB limit for 360 seconds
-                 (400000000, 360),  # 400MB limit for 360 seconds
-                 (300000000, 360),  # 300MB limit for 360 seconds
-                 (200000000, 360)]  # 200MB limit for 360 seconds
+    scenarios = [(1500000000, 180),  # 1.5GB limit for 180 seconds
+                 (1200000000, 180),  # 1.2GB limit for 180 seconds
+                 (1000000000, 180),  # 1GB limit for 180 seconds
+                 (900000000, 180),  # 900MB limit for 180 seconds
+                 (800000000, 180),  # 800MB limit for 180 seconds
+                 (700000000, 180),  # 700MB limit for 180 seconds
+                 (600000000, 180),  # 1800MB limit for 180 seconds
+                 (500000000, 180),  # 500MB limit for 180 seconds
+                 (400000000, 180),  # 400MB limit for 180 seconds
+                 (300000000, 180),  # 300MB limit for 180 seconds
+                 (200000000, 180),  # 200MB limit for 180 seconds
+                 (2000000000, 1)]  # reset
 
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
