@@ -73,17 +73,17 @@ def main():
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
 
-    scenarios = [(1500000000, 180),  # 1.5GB limit for 180 seconds
-                 (1200000000, 180),  # 1.2GB limit for 180 seconds
-                 (1000000000, 180),  # 1GB limit for 180 seconds
-                 (900000000, 180),  # 900MB limit for 180 seconds
-                 (800000000, 180),  # 800MB limit for 180 seconds
-                 (700000000, 180),  # 700MB limit for 180 seconds
-                 (600000000, 180),  # 1800MB limit for 180 seconds
-                 (500000000, 180),  # 500MB limit for 180 seconds
-                 (400000000, 180),  # 400MB limit for 180 seconds
-                 (300000000, 180),  # 300MB limit for 180 seconds
-                 (200000000, 180),  # 200MB limit for 180 seconds
+    scenarios = [  # (1500000000, 75),  # 1.5GB limit for 75 seconds
+        # (1200000000, 75),  # 1.2GB limit for 75 seconds
+        # (1000000000, 75),  # 1GB limit for 75 seconds
+        # (900000000, 75),  # 900MB limit for 75 seconds
+        (800000000, 75),  # 800MB limit for 75 seconds
+        # (700000000, 75),  # 700MB limit for 75 seconds
+        (600000000, 75),  # 750MB limit for 75 seconds
+        # (500000000, 75),  # 500MB limit for 75 seconds
+        (400000000, 75),  # 400MB limit for 75 seconds
+        # (300000000, 75),  # 300MB limit for 75 seconds
+        (200000000, 75),  # 200MB limit for 75 seconds
                  (2000000000, 1)]  # reset
 
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
@@ -119,8 +119,6 @@ def main():
                 if elapsed_time >= FINESSE:
                     t += elapsed_time
                     start_time = current_time
-                    record_time = current_time  # Capture the timestamp for consistency
-                    print(f"Record time: {record_time}")
 
                     if args.mode == 'collect':
                         print("Generating dataset...")
