@@ -19,7 +19,7 @@ class ScenarioManager:
             if self.stop_event.is_set():
                 break
             self.callback('start', i)
-            self.cgroup_manager.change_cgroup_limit_vm(limit)
+            self.cgroup_manager.change_cgroup_limit_vm(limit * 1024 * 1024)
             time.sleep(duration)
             self.callback('end', i)
         self.callback('complete', len(self.scenarios))

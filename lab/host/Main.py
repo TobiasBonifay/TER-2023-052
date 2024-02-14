@@ -6,7 +6,8 @@ import numpy as np
 
 from lab.common import Constants
 from lab.common.Constants import FINESSE, VM1_IP, VM1_PORT, VM2_IP, VM2_PORT, DURATION, VM1_PATH_CGROUP_FILE, \
-    HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2
+    HOST_PATH_CGROUP_FILE, THRESHOLD_1, THRESHOLD_2, BANDWIDTH_UPLOAD_VM_, BANDWIDTH_DOWNLOAD_VM_, RESPONSE_TIME_VM_, \
+    SWAP_HOST_, MEMORY_HOST_, MEMORY_AVAILABLE_VM_, MEMORY_TOTAL_VM_, C_GROUP_LIMIT_VM_, TIME
 from lab.host.BandwidthMonitor import BandwidthMonitor
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
@@ -28,22 +29,25 @@ def get_vm2_data(client):
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
+    mega = (1024 * 1024)
     current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
-    mem_vm_view = get_vm1_data(client_vm1)
-    print(f"    1 Memory (VM view): {mem_vm_view / (1024 * 1024)} GB")
+    print(f"    {C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
+    mem_total_vm, mem_available_view = get_vm1_data(client_vm1)
+    print(f"    {MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
+    print(f"    {MEMORY_AVAILABLE_VM_}: {mem_available_view / mega} MB")
     mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
-    print(f"    2 Memory (Host view): {mem_host_view / (1024 * 1024 * 1024)} GB")
+    print(f"    {MEMORY_HOST_}: {mem_host_view / mega} MB")
     mem_swap = cgroup_manager.get_swap_used_hostview()
+    print(f"    {SWAP_HOST_}: {mem_swap / mega} MB")
     response_time = get_vm2_data(client_vm2)
-    print(f"    2.5 Swap: {mem_swap / (1024 * 1024)} MB")
-    print(f"    3 CT: {response_time} ms")
+    print(f"    {RESPONSE_TIME_VM_}: {response_time} ms")
     bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
-    print(f"    4 BW (Download): {bw_download / (1024 * 1024)} MB/s, BW (Upload): {bw_upload / (1024 * 1024)} MB/s")
-    # print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}"
-    #      f", CT: {response_time}, BW (Download): {bw_download}, BW (Upload): {bw_upload}")
+    print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
+    print(f"    {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
+
     writer.writerow(
-        [time.time(), current_cgroup_limit, mem_vm_view, mem_host_view, mem_swap, response_time, bw_download,
-         bw_upload])
+        [time.time(), current_cgroup_limit, mem_total_vm, mem_available_view, mem_host_view, mem_swap, response_time,
+         bw_download, bw_upload])
     print("     Data written to CSV.")
 
 
@@ -57,8 +61,6 @@ def run_model_and_adjust(client_vm1, client_vm2, model, writer, bandwidth_monito
     action = model.predict(input_data)
     # Adjust the cgroup limit
     action_taken = cgroup_manager.adjust_cgroup_limit_vm(action, mem_vm_view)
-    print(f"Memory (VM view): {mem_vm_view}, Memory (Host view): {mem_host_view}, CT: {response_time}"
-          f", BW (Download): {bw_download}, BW (Upload): {bw_upload}, Action Taken: {action_taken}")
     # Write to CSV
     writer.writerow([time.time(), mem_vm_view, mem_host_view, response_time, bw_download, bw_upload, action_taken])
 
@@ -82,32 +84,12 @@ def main():
     parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
-
-    scenarios = [  # (1200000000, 75),  # 1.2GB limit for 75 seconds
-        (999997440, 180),  # 1GB limit for 180 seconds
-        (799997952, 180),  # 800MB limit for 180 seconds
-        (599998464, 180),  # 600MB limit for 180 seconds
-        (399998976, 180),  # 400MB limit for 180 seconds
-        (299999232, 180),  # 300MB limit for 180 seconds
-        (199999488, 180),  # 200MB limit for 180 seconds
-        (299999232, 180),  # 300MB limit for 180 seconds
-        (399998976, 180),  # 400MB limit for 180 seconds
-        (599998464, 180),  # 600MB limit for 180 seconds
-        (799997952, 180),  # 800MB limit for 180 seconds
-        (599998464, 60),  # 600MB limit for 60 seconds
-        (399998976, 60),  # 400MB limit for 60 seconds
-        (299999232, 60),  # 300MB limit for 60 seconds
-        (199999488, 60),  # 200MB limit for 60 seconds
-        (299999232, 60),  # 300MB limit for 60 seconds
-        (399998976, 60),  # 400MB limit for 60 seconds
-        (599998464, 60),  # 600MB limit for 60 seconds
-        (799997952, 60),  # 800MB limit for 60 seconds
-        (999997440, 60)]  # 1GB limit for 60 seconds
-
+    # generate scenarios
+    scenarios = [(1024, 60), (512, 60), (196, 60), (396, 60), (256, 60), (512, 60), (1024, 60)]
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
 
-    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP)
+    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP, Constants.PCAP_FILE)
 
     model = None
     if args.mode == 'predict':
@@ -123,12 +105,12 @@ def main():
         # Initialize the CSV file writer and begin the main loop for data collection or prediction
         with open(csv_filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            header = ['Time', 'Memory (VM view)', 'Memory (Host view)', 'Swap used (Host view)', 'CT', 'BW (Download)',
-                      'BW (Upload)']
+            header = [TIME, C_GROUP_LIMIT_VM_, MEMORY_TOTAL_VM_, MEMORY_AVAILABLE_VM_,
+                      MEMORY_HOST_, SWAP_HOST_, RESPONSE_TIME_VM_, BANDWIDTH_DOWNLOAD_VM_,
+                      BANDWIDTH_UPLOAD_VM_]
             if args.mode == 'predict':
                 header.append('Action Taken')
-            if args.mode == 'collect':
-                header.insert(1, 'Memory Limit')
+
             writer.writerow(header)
 
             t = 0

@@ -20,6 +20,6 @@ fi
 # ip a and wait user to choose the interface and edit the config.json
 # change the cgroup path to the correct one
 ip a
-nano config.json
+# nano config.json
 
-sudo python3 -m lab.apache2.TcpMemProc
+# sudo python3 -m lab.apache2.TcpMemProc

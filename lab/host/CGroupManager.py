@@ -19,7 +19,12 @@ class CGroupManager:
         """
         try:
             with open(self.vm_cgroup_memory_max, "w") as f:
-                print(f"Changing cgroup limit from {self.get_cgroup_memory_limit_vm()} to {new_limit}")
+                print(
+                    f"Changing cgroup limit from {self.get_cgroup_memory_limit_vm() / (1024 * 1024)} to {new_limit / (1024 * 1024)}")
+                # if below Constants.MIN_CGROUP_LIMIT, set to Constants.MIN_CGROUP_LIMIT
+                if new_limit < MIN_CGROUP_LIMIT:
+                    print(f"Limit too low, setting to {MIN_CGROUP_LIMIT}")
+                    new_limit = MIN_CGROUP_LIMIT
                 f.write(str(new_limit))
         except FileNotFoundError as e:
             print(f"File not found - {e}")
@@ -77,12 +82,12 @@ class CGroupManager:
         if predicted_value < self.threshold_1:
             new_limit = max(int(mem_vm_view * (1 + FINESSE)), MIN_CGROUP_LIMIT)
             print(f"Predicted value: {predicted_value}, new limit: {new_limit}")
-            self.change_cgroup_limit_vm(new_limit)
+            self.change_cgroup_limit_vm(new_limit * 1024 * 1024)
             return -1
         elif predicted_value >= self.threshold_2:
             new_limit = max(int(mem_vm_view * (1 - FINESSE)), MIN_CGROUP_LIMIT)
             print(f"Predicted value: {predicted_value}, new limit: {new_limit}")
-            self.change_cgroup_limit_vm(new_limit)
+            self.change_cgroup_limit_vm(new_limit * 1024 * 1024)
             return 1
         else:
             return 0

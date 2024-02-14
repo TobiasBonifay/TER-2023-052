@@ -1,7 +1,7 @@
 {
   "HOST_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice",
-  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d14\\x2dapache.scope",
-  "VM1_IP": "192.168.100.173",
+  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d18\\x2da.scope",
+  "VM1_IP": "192.168.100.155",
   "VM2_IP": "192.168.100.164",
   "VM1_PORT": 8000,
   "VM2_PORT": 8000,
@@ -10,8 +10,9 @@
   "MODEL_PATH": "/home/tobias/TER-2023-052/lab/model/",
   "CSV_FILE": "vm_data",
   "RUNTIME_ACTIONS_FILE": "runtime_actions.csv",
+  "PCAP_FILE": "pcap_file.pcap",
   "THRESHOLD_1": 2000,
   "THRESHOLD_2": 4000,
-  "MIN_CGROUP_LIMIT": 200000,
+  "MIN_CGROUP_LIMIT": 150000,
   "INTERFACE": "virbr0"
 }
