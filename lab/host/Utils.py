@@ -37,7 +37,7 @@ def parse_memory_info(meminfo):
     for line in lines:
         if 'MemTotal' in line:
             mem_total = int(re.search(r'\d+', line).group())
-            print(f"    MemTotal (MB): {mem_total / 1024}")
+            # print(f"    MemTotal (MB): {mem_total / 1024}")
         elif 'MemFree' in line:
             mem_free = int(re.search(r'\d+', line).group())
             # print(f"    MemFree (MB): {mem_free / 1024}")
@@ -49,7 +49,7 @@ def parse_memory_info(meminfo):
             # print(f"    Cached (MB): {mem_cached / 1024}")
         elif 'MemAvailable' in line:
             mem_available = int(re.search(r'\d+', line).group())
-            print(f"    MemAvailable (MB): {mem_available / 1024}")
+            # print(f"    MemAvailable (MB): {mem_available / 1024}")
 
     return mem_total * 1024, mem_available * 1024
 
