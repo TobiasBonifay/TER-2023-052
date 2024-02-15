@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from lab.common.Constants import BANDWIDTH_UPLOAD_VM_, BANDWIDTH_DOWNLOAD_VM_, RESPONSE_TIME_VM_, \
-    SWAP_HOST_, MEMORY_HOST_, MEMORY_AVAILABLE_VM_, MEMORY_TOTAL_VM_, C_GROUP_LIMIT_VM_
+    SWAP_HOST_, MEMORY_HOST_, C_GROUP_LIMIT_VM_, MEMORY_USED_VM_
 
 
 # Function to get the latest file in a directory
@@ -39,8 +39,9 @@ ax1.grid(True)
 
 # Second plot for memory usage
 ax2.plot(data['Time'], data[C_GROUP_LIMIT_VM_] / MEGA, label=C_GROUP_LIMIT_VM_, color='red')
-ax2.plot(data['Time'], data[MEMORY_TOTAL_VM_] / MEGA, label=MEMORY_TOTAL_VM_, color='blue')
-ax2.plot(data['Time'], data[MEMORY_AVAILABLE_VM_] / MEGA, label=MEMORY_AVAILABLE_VM_, color='green')
+# ax2.plot(data['Time'], data[MEMORY_TOTAL_VM_] / MEGA, label=MEMORY_TOTAL_VM_, color='blue')
+# ax2.plot(data['Time'], data[MEMORY_AVAILABLE_VM_] / MEGA, label=MEMORY_AVAILABLE_VM_, color='green')
+ax2.plot(data['Time'], data[MEMORY_USED_VM_] / MEGA, label=MEMORY_USED_VM_, color='green')
 ax2.plot(data['Time'], data[MEMORY_HOST_] / MEGA, label=MEMORY_HOST_, color='purple')
 ax2.plot(data['Time'], data[SWAP_HOST_] / MEGA, label=SWAP_HOST_, color='orange')
 ax2.set_xlabel('Time')

@@ -22,4 +22,4 @@ fi
 ip a
 # nano config.json
 
-# sudo python3 -m lab.apache2.TcpMemProc
+# sudo python3 -m lab.apache2.MemoryGetterApache

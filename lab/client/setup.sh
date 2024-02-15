@@ -20,4 +20,4 @@ fi
 ip a
 nano config.json
 
-sudo python3 -m lab.client.TcpBandwidth
+sudo python3 -m lab.client.BandwidthGetterClient

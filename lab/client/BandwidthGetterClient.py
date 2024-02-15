@@ -45,7 +45,7 @@ def run_server(host, port):
                         response_time = run_apache_benchmark()
                         data_to_send = f"{response_time}"
                         conn.sendall(data_to_send.encode())
-                        # time.sleep(Constants.SLEEP_APACHE_BENCHMARK)
+                        print(f"Sent {data_to_send}")
                 except BrokenPipeError as e:
                     print(f"Broken pipe error: {e}")
                     # If the client disconnects, we should continue listening for new connections
