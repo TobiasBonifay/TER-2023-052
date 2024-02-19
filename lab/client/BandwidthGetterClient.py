@@ -22,9 +22,18 @@ def run_apache_benchmark():
                 # The line format is expected to be: 'Time per request: [time] [ms] (mean, across all concurrent
                 # requests)' Extract the time by splitting by spaces and taking the fourth element
                 mean_time_str = line.split()[3]
+                max_time_str = line.split()[5]
                 # Ensure we only process digits and dot for float conversion
+                output = "?"
                 if all(char.isdigit() or char == '.' for char in mean_time_str):
-                    return float(mean_time_str)
+                    output += float(mean_time_str)
+                    print(f"Mean time: {output}")
+                    output += ","
+                if all(char.isdigit() or char == '.' for char in max_time_str):
+                    output += float(max_time_str)
+                    print(f"Max time: {output}")
+                print(f"Output: {output}")
+                return output
         return 0  # If not found, return 0
     except subprocess.CalledProcessError as e:
         print(f"Error while running apache benchmark: {e.stderr.decode()}")

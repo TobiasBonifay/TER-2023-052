@@ -22,7 +22,7 @@ class BandwidthMonitor:
         self.thread.start()
 
     def packet_callback(self, packet):
-        if IP in packet:
+        if IP in packet and (packet[IP].src == self.vm_ip or packet[IP].dst == self.vm_ip):
             packet_length = len(packet)
             with self.lock:
                 self.packets.append(packet)
@@ -36,12 +36,14 @@ class BandwidthMonitor:
     def monitor_bandwidth(self):
         while not self.should_stop:
             try:
-                sniff(iface=self.interface, prn=self.packet_callback, store=False, timeout=10)
+                sniff(filter="ip", iface=self.interface, prn=self.packet_callback, store=False, timeout=10)
                 # Write packets to pcap file every 10 seconds
-                with self.lock:
-                    wrpcap(self.pcap_file, self.packets, append=True)
-                    self.packets.clear()
+                if len(self.packets) > 0:
+                    with self.lock:
+                        wrpcap(self.pcap_file, self.packets, append=True)
+                        self.packets.clear()
             except Exception as e:
+                print(f"Packet summary: {self.packets}")
                 print(f"Error monitoring bandwidth: {e}")
 
     def get_bandwidth(self):

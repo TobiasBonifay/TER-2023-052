@@ -22,6 +22,12 @@ def get_vm1_data(apache):
 
 def get_vm2_data(client):
     data = client.get_data()
+    # if data has multiple dot separators, it is a float
+    if data.count('?') > 1:
+        # parse the last float in the string
+        split = data.split('?')
+        print("Serveur returned data: ", split)
+        return float(split[-1])
     return float(data)
 
 

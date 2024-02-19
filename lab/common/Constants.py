@@ -37,4 +37,4 @@ C_GROUP_LIMIT_VM_ = 'VM VIEW: Current CGroup Limit'
 ACTION_TAKEN = 'Action Taken'
 TIME = 'Time'
 
-SCENARIOS = [(1024, 60), (512, 60), (196, 60), (396, 60), (256, 60), (512, 60), (1024, 60)]
+SCENARIOS = [(1024, 60), (768, 60), (512, 60), (256, 60), (1024, 60)]
