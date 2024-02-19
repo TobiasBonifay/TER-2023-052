@@ -84,6 +84,11 @@ def run_server(host, port):
                     print(f"Disconnected from {addr}")
         except KeyboardInterrupt:
             print("Server is shutting down.")
+        except ConnectionResetError as e:
+            print(f"Connection reset error: {e}")
+            run_server(host, port)
+        except Exception as e:
+            print(f"Exception occurred: {e}")
 
 
 if __name__ == "__main__":
