@@ -6,7 +6,7 @@
   "VM1_PORT": 8000,
   "VM2_PORT": 8000,
   "DURATION": 99999,
-  "FINESSE": 0.5,
+  "FINESSE": 30,
   "MODEL_PATH": "/home/tobias/TER-2023-052/lab/model/",
   "CSV_FILE": "vm_data",
   "RUNTIME_ACTIONS_FILE": "runtime_actions.csv",

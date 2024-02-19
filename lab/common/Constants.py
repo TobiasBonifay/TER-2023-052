@@ -25,7 +25,6 @@ except FileNotFoundError as e:
     print(f"Error loading config: {e}")
     pass
 
-
 BANDWIDTH_UPLOAD_VM_ = 'VM2 VIEW: Bandwidth Upload'
 BANDWIDTH_DOWNLOAD_VM_ = 'VM2 VIEW: Bandwidth Download'
 RESPONSE_TIME_VM_ = 'VM2 VIEW: Response Time'
@@ -35,4 +34,7 @@ MEMORY_AVAILABLE_VM_ = 'VM VIEW: Memory Available'
 MEMORY_USED_VM_ = 'VM VIEW: Memory Used'
 MEMORY_TOTAL_VM_ = 'VM VIEW: Memory Total'
 C_GROUP_LIMIT_VM_ = 'VM VIEW: Current CGroup Limit'
+ACTION_TAKEN = 'Action Taken'
 TIME = 'Time'
+
+SCENARIOS = [(1024, 60), (512, 60), (196, 60), (396, 60), (256, 60), (512, 60), (1024, 60)]
