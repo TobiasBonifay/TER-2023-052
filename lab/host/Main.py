@@ -22,28 +22,17 @@ def get_vm1_data(apache):
 
 
 def get_vm2_data(client):
-    buffer = ''
-    while True:
-        data = client.get_data()
-        if not data:
-            break  # No more data.
-        buffer += data
-        if "\n" in buffer:
-            line, _, buffer = buffer.partition("\n")  # Split off one line.
-            try:
-                return float(line)
-            except ValueError:
-                print(f"Could not convert string to float: '{line}'")
-                continue  # Try the next line if this one fails.
-    return 0.0  # Return 0.0 if no valid data was found.
-
+    data = client.get_data()
+    return float(data)
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
+    response_time = []
     while continue_running:
         mega = 1024 * 1024
-        response_time_average = get_vm2_data(client_vm2)
-        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms")
+        response_time.append(get_vm2_data(client_vm2))
+        response_time_average = sum(response_time) / len(response_time) if response_time else 0
+        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms, response time: {response_time}")
 
         bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
         print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
@@ -68,6 +57,7 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
             writer.writerow(
                 [time.time(), current_cgroup_limit, mem_total_vm, mem_available_vm, mem_used_vm, mem_host_view,
                  mem_swap, response_time_average, bw_download, bw_upload])
+
         time.sleep(Constants.FINESSE)
 
 

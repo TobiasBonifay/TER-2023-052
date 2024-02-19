@@ -72,7 +72,7 @@ def run_server(host, port):
                 try:
                     while True:
                         response_time = run_apache_benchmark()
-                        data_to_send = f"{response_time}\n"
+                        data_to_send = f"{response_time}"
                         conn.sendall(data_to_send.encode())
                         print(f"Sent {data_to_send}")
                 except BrokenPipeError as e:
