@@ -14,18 +14,8 @@ class Client:
         self.client.connect((self.host, self.port))
 
     def get_data(self):
-        BUFFER_SIZE = 4096
-        data = self.client.recv(BUFFER_SIZE).decode()
-
-        # Processing data stream...
-        response_times = []
-        buffer = ''
-        buffer += data
-        while '\n' in buffer:
-            response_time_str, buffer = buffer.split('\n', 1)
-            response_times.append(response_time_str)
-
-        return response_times
+        data = self.client.recv(4096).decode()
+        return data
 
     def close(self):
         self.client.close()

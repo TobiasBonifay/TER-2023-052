@@ -22,43 +22,64 @@ def get_vm1_data(apache):
 
 
 def get_vm2_data(client):
-    data = client.get_data()
-    return data
+    return client.get_data()
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
-    response_time = []
+    global continue_running
+    global csv_file_lock
+    mega = 1024 * 1024
+    response_times = []
+    last_time = time.time()
+
     while continue_running:
-        mega = 1024 * 1024
-        response_time.append(get_vm2_data(client_vm2))
-        response_time_average = sum(response_time) / len(response_time) if response_time else 0
-        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms, response time: {response_time}")
+        response_time = get_vm2_data(client_vm2)
+        print(f"{Constants.RESPONSE_TIME_VM_}: {response_time}")
+        if response_time is not None:
+            response_times.append(float(response_time))
 
-        bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
-        print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
-        print(f"    {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
+        # If the finesse period has passed, calculate the average
+        if (time.time() - last_time) >= Constants.FINESSE:
+            if response_times:
+                response_time_average = sum(response_times) / len(response_times)
+                response_times.clear()  # Reset for the next finesse period
+            else:
+                response_time_average = 0
 
-        current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
-        print(f"    {C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
+            print(f"{Constants.RESPONSE_TIME_VM_}: {response_time_average} ms")
 
-        mem_total_vm, mem_available_vm = get_vm1_data(client_vm1)
-        print(f"    {Constants.MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
-        print(f"    {Constants.MEMORY_AVAILABLE_VM_}: {mem_available_vm / mega} MB")
-        mem_used_vm = mem_total_vm - mem_available_vm
-        print(f"    {Constants.MEMORY_USED_VM_}: {mem_used_vm / mega} MB")
+            bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
+            print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
+            print(f"    {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
 
-        mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
-        print(f"    {Constants.MEMORY_HOST_}: {mem_host_view / mega} MB")
+            current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
+            print(f"    {C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
 
-        mem_swap = cgroup_manager.get_swap_used_hostview()
-        print(f"    {Constants.SWAP_HOST_}: {mem_swap / mega} MB")
+            mem_total_vm, mem_available_vm = get_vm1_data(client_vm1)
+            print(f"    {Constants.MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
+            print(f"    {Constants.MEMORY_AVAILABLE_VM_}: {mem_available_vm / mega} MB")
+            mem_used_vm = mem_total_vm - mem_available_vm
+            print(f"    {Constants.MEMORY_USED_VM_}: {mem_used_vm / mega} MB")
 
-        with csv_file_lock:
-            writer.writerow(
-                [time.time(), current_cgroup_limit, mem_total_vm, mem_available_vm, mem_used_vm, mem_host_view,
-                 mem_swap, response_time_average, bw_download, bw_upload])
+            mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
+            print(f"    {Constants.MEMORY_HOST_}: {mem_host_view / mega} MB")
 
-        time.sleep(Constants.FINESSE)
+            mem_swap = cgroup_manager.get_swap_used_hostview()
+            print(f"    {Constants.SWAP_HOST_}: {mem_swap / mega} MB")
+
+            # Write to CSV with the average response time
+            with csv_file_lock:
+                writer.writerow([
+                    time.time(), current_cgroup_limit, mem_total_vm, mem_available_vm,
+                    mem_used_vm, mem_host_view, mem_swap, response_time_average,
+                    bw_download, bw_upload
+                ])
+
+            # Reset the timer for the next finesse period
+            last_time = time.time()
+
+        # Sleep for a short interval to prevent tight looping
+        time.sleep(0.1)  # A short sleep to prevent a tight loop that hogs the CPU
 
 
 def scenario_callback(action, scenario_index):

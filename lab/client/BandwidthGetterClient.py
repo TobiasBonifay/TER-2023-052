@@ -18,7 +18,7 @@ def run_apache_benchmark():
         output = result.stdout.decode()
         # Parse and return the mean time per request from the benchmark result
         for line in output.splitlines():
-            if "Time Taken" in line:
+            if "Taken" in line:
                 print(line)
             if "Time per request:" in line and "[ms] (mean" in line:
                 # The line format is expected to be: 'Time per request: [time] [ms] (mean, across all concurrent
@@ -74,7 +74,7 @@ def run_server(host, port):
                         response_time = run_apache_benchmark()
                         data_to_send = f"{response_time}"
                         conn.sendall(data_to_send.encode())
-                        print(f"Sent {data_to_send}\n")
+                        print(f"Sent {data_to_send}")
                 except BrokenPipeError as e:
                     print(f"Broken pipe error: {e}")
                     # If the client disconnects, we should continue listening for new connections
