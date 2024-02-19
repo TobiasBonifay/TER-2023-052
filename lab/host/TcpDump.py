@@ -11,6 +11,7 @@ class TcpdumpThread(threading.Thread):
         self.proc = None
 
     def run(self):
+        print(f"Starting tcpdump on {self.interface} for {self.vm_ip}...")
         command = f"sudo tcpdump -i {self.interface} host {self.vm_ip} -s 60 -w {self.output_file}"
         self.proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

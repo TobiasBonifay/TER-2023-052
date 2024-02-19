@@ -24,7 +24,7 @@ def get_vm1_data(apache):
 def get_vm2_data(client):
     buffer = ''
     while True:
-        data = client.recv(1024).decode()  # Assuming `client` is a socket object here.
+        data = client.get_data()
         if not data:
             break  # No more data.
         buffer += data
@@ -96,7 +96,7 @@ def main():
     print(f"Output file: {csv_filename} and {pcap_filename}")
 
     bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
-    tcpdump_thread = TcpdumpThread(INTERFACE, VM_IP, OUTPUT_FILE)
+    tcpdump_thread = TcpdumpThread(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
     cgroup_manager = CGroupManager(Constants.VM1_PATH_CGROUP_FILE, Constants.HOST_PATH_CGROUP_FILE,
                                    Constants.THRESHOLD_1, Constants.THRESHOLD_2)
     scenario_manager = ScenarioManager(cgroup_manager, Constants.SCENARIOS, scenario_callback)
@@ -124,6 +124,7 @@ def main():
             data_thread.join()
 
     scenario_manager.stop()
+    tcpdump_thread.stop()
     print("Script completed.")
 
 
