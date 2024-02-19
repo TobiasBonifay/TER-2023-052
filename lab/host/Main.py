@@ -4,7 +4,6 @@ import threading
 import time
 
 from lab.common import Constants
-from lab.common.Constants import BANDWIDTH_DOWNLOAD_VM_, BANDWIDTH_UPLOAD_VM_, C_GROUP_LIMIT_VM_
 from lab.host.BandwidthMonitor import BandwidthMonitor
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
@@ -20,68 +19,65 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
     global continue_running, csv_file_lock
     mega = 1024 * 1024
     response_times = []
-    bandwidth_tuples = []
+    bandwidth_data = []
     last_time = time.time()
 
     while continue_running:
+        try:
+            response_time = client_vm2.get_data()
+            if response_time:
+                new_response_time = float(response_time)
+                print(f"        + {Constants.RESPONSE_TIME_VM_}: {new_response_time} ms")
+                response_times.append(new_response_time)
+        except ValueError:
+            print("Invalid response time received")
+
+        # Collect bandwidth data directly within the loop
+        bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
+        print(f"        + {Constants.BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB/s")
+        print(f"        + {Constants.BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB/s")
+        bandwidth_data.append((bw_download, bw_upload))
+
         current_time = time.time()
 
         # If the finesse period has passed, calculate the average
         if current_time - last_time >= Constants.FINESSE:
-            # Response time
-            if response_times:
-                response_time_average = sum(response_times) / len(response_times)
-                response_times.clear()  # Reset for the next finesse period
-            else:
-                response_time_average = 0
+            # Calculating averages
+            response_time_average = sum(response_times) / len(response_times) if response_times else 0
+            bw_download_avg = sum(bw[0] for bw in bandwidth_data) / len(bandwidth_data) if bandwidth_data else 0
+            bw_upload_avg = sum(bw[1] for bw in bandwidth_data) / len(bandwidth_data) if bandwidth_data else 0
             print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms")
+            print(f"    {Constants.BANDWIDTH_DOWNLOAD_VM_}: {bw_download_avg / mega} MB/s")
+            print(f"    {Constants.BANDWIDTH_UPLOAD_VM_}: {bw_upload_avg / mega} MB/s")
 
-            # Bandwidth
-            if bandwidth_tuples:
-                bw_download = sum([t[0] for t in bandwidth_tuples]) / len(bandwidth_tuples)
-                bw_upload = sum([t[1] for t in bandwidth_tuples]) / len(bandwidth_tuples)
-                bandwidth_tuples.clear()
-            else:
-                bw_download = 0
-                bw_upload = 0
-            print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
-            print(f"    {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
+            # Resetting for next period
+            response_times.clear()
+            bandwidth_data.clear()
+            last_time = current_time
 
-            # VM memory
-            current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
-            print(f"    {C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
-
-            mem_total_vm, mem_available_vm = parse_memory_info(client_vm1.get_data())
-            print(f"    {Constants.MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
-            print(f"    {Constants.MEMORY_AVAILABLE_VM_}: {mem_available_vm / mega} MB")
+            # Additional metrics collection
+            meminfo_data = client_vm1.get_data() if client_vm1.get_data() else "MemTotal: 0 kB\nMemAvailable: 0 kB"
+            mem_total_vm, mem_available_vm = parse_memory_info(meminfo_data)
             mem_used_vm = mem_total_vm - mem_available_vm
-            print(f"    {Constants.MEMORY_USED_VM_}: {mem_used_vm / mega} MB")
-
+            print(f"    {Constants.MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
+            current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
+            print(f"    {Constants.C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
             mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
             print(f"    {Constants.MEMORY_HOST_}: {mem_host_view / mega} MB")
 
             mem_swap = cgroup_manager.get_swap_used_hostview()
             print(f"    {Constants.SWAP_HOST_}: {mem_swap / mega} MB")
 
-            last_time = current_time  # Reset the timer for the next finesse period
-        else:
-            # Collect the response time data
-            response_time = client_vm2.get_data()
-            if response_time is not None:
-                try:
-                    # Convert response time to float and append to the list
-                    response_times.append(float(response_time))
-                except ValueError:
-                    # Handle the case where conversion to float fails
-                    print(f"Invalid response time received: {response_time}")
+            # CSV writing
+            with csv_file_lock:
+                writer.writerow([
+                    current_time, current_cgroup_limit, mem_total_vm, mem_available_vm,
+                    mem_used_vm, mem_host_view, mem_swap, response_time_average,
+                    bw_download_avg / mega, bw_upload_avg / mega
+                ])
 
-            # Collect the bandwidth data
-            bandwidth = bandwidth_monitor.get_bandwidth()
-            if bandwidth is not None:
-                bandwidth_tuples.append(bandwidth)
-
-        # Sleep for a short interval to prevent tight looping
-        time.sleep(0.1)  # A short sleep to prevent a tight loop that hogs the CPU
+        # Sleep to limit loop speed
+        time.sleep(0.1)
 
 
 def scenario_callback(action, scenario_index):
