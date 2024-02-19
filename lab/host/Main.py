@@ -22,19 +22,10 @@ def get_vm1_data(apache):
 
 def get_vm2_data(client):
     data = client.get_data()
-    # if data has multiple dot separators, it is a float
     print(f"Data: {data}")
     if data:
-        data = data.strip()[1:]
-        if data.count('?'):
-            # parse the last float in the string
-            # written like ?avg,max[?avg,max]
-            last_avg = data.split('?')[-1].split(',')[0]
-            last_max = data.split('?')[-1].split(',')[1]
-            return float(last_avg), float(last_max)
-        last_avg, last_max = data.split(',')
-        return float(last_avg), float(last_max)
-    return 0.0, 0.0
+        return float(data)
+    return 0.0
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
