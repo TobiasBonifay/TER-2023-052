@@ -24,17 +24,12 @@ def run_apache_benchmark():
                 mean_time_str = line.split()[3]
                 max_time_str = line.split()[5]
                 # Ensure we only process digits and dot for float conversion
-                output = "?"
                 if all(char.isdigit() or char == '.' for char in mean_time_str):
-                    output += mean_time_str
-                    print(f"Mean time: {output}")
-                    output += ","
-                if all(char.isdigit() or char == '.' for char in max_time_str):
-                    output += max_time_str
-                    print(f"Max time: {output}")
-                print(f"Output: {output}")
-                return output
-        return 0  # If not found, return 0
+                    print(f"Mean time: {mean_time_str}")
+                    return float(mean_time_str)
+            if "Time Taken" in line:
+                print(line)
+        return 0.0
     except subprocess.CalledProcessError as e:
         print(f"Error while running apache benchmark: {e.stderr.decode()}")
         return 0

@@ -23,19 +23,25 @@ def get_vm1_data(apache):
 def get_vm2_data(client):
     data = client.get_data()
     # if data has multiple dot separators, it is a float
-    if data.count('?') > 1:
-        # parse the last float in the string
-        split = data.split('?')
-        print("Serveur returned data: ", split)
-        return float(split[-1])
-    return float(data)
+    print(f"Data: {data}")
+    if data:
+        data = data.strip()[1:]
+        if data.count('?'):
+            # parse the last float in the string
+            # written like ?avg,max[?avg,max]
+            last_avg = data.split('?')[-1].split(',')[0]
+            last_max = data.split('?')[-1].split(',')[1]
+            return float(last_avg), float(last_max)
+        last_avg, last_max = data.split(',')
+        return float(last_avg), float(last_max)
+    return 0.0, 0.0
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
     while continue_running:
         mega = 1024 * 1024
-        response_time = get_vm2_data(client_vm2)
-        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time} ms")
+        response_time_average, response_time_max = get_vm2_data(client_vm2)
+        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms, peak: {response_time_max} ms")
 
         bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
         print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
@@ -59,7 +65,7 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
         with csv_file_lock:
             writer.writerow(
                 [time.time(), current_cgroup_limit, mem_total_vm, mem_available_vm, mem_used_vm, mem_host_view,
-                 mem_swap, response_time, bw_download, bw_upload])
+                 mem_swap, response_time_average, bw_download, bw_upload])
         time.sleep(Constants.FINESSE)
 
 
