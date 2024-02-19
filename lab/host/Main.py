@@ -82,13 +82,15 @@ def main():
 
     apache = Client(Constants.VM1_IP, Constants.VM1_PORT)
     client = Client(Constants.VM2_IP, Constants.VM2_PORT)
-    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP, Constants.PCAP_FILE)
+
+    csv_filename = get_output_file_name()
+    pcap_filename = get_output_file_name("scapy_", Constants.PCAP_FILE)
+    print(f"Output file: {csv_filename} and {pcap_filename}")
+
+    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
     cgroup_manager = CGroupManager(Constants.VM1_PATH_CGROUP_FILE, Constants.HOST_PATH_CGROUP_FILE,
                                    Constants.THRESHOLD_1, Constants.THRESHOLD_2)
     scenario_manager = ScenarioManager(cgroup_manager, Constants.SCENARIOS, scenario_callback)
-
-    csv_filename = get_output_file_name()
-    print(f"Output file: {csv_filename}")
 
     with open(csv_filename, 'w', newline='') as file:
         writer = csv.writer(file)

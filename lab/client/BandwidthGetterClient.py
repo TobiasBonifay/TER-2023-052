@@ -26,11 +26,11 @@ def run_apache_benchmark():
                 # Ensure we only process digits and dot for float conversion
                 output = "?"
                 if all(char.isdigit() or char == '.' for char in mean_time_str):
-                    output += float(mean_time_str)
+                    output += mean_time_str
                     print(f"Mean time: {output}")
                     output += ","
                 if all(char.isdigit() or char == '.' for char in max_time_str):
-                    output += float(max_time_str)
+                    output += max_time_str
                     print(f"Max time: {output}")
                 print(f"Output: {output}")
                 return output

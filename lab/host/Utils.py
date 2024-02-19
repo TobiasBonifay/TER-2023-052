@@ -7,7 +7,7 @@ import tensorflow as tf
 from lab.common.Constants import MODEL_PATH
 
 
-def get_output_file_name():
+def get_output_file_name(prefix='vm_data_', end='csv'):
     # Get the current file's directory
     current_dir = os.path.dirname(__file__)
 
@@ -21,7 +21,7 @@ def get_output_file_name():
 
     # Generate the filename with a timestamp
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    csv_filename = f"vm_data_{timestamp}.csv"
+    csv_filename = f"{prefix}{timestamp}.{end}"
     csv_filepath = os.path.join(outputs_dir, csv_filename)
     return csv_filepath
 
