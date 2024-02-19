@@ -16,46 +16,49 @@ continue_running = True
 csv_file_lock = threading.Lock()
 
 
-def get_vm1_data(apache):
-    data = apache.get_data()
-    return parse_memory_info(data)
-
-
-def get_vm2_data(client):
-    return client.get_data()
-
-
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
     global continue_running
     global csv_file_lock
     mega = 1024 * 1024
     response_times = []
+    bandwidth_tuples = []
     last_time = time.time()
 
     while continue_running:
-        response_time = get_vm2_data(client_vm2)
-        print(f"{Constants.RESPONSE_TIME_VM_}: {response_time}")
+        response_time = client_vm2.get_data()
+        print(f"        {Constants.RESPONSE_TIME_VM_}: {response_time}")
         if response_time is not None:
             response_times.append(float(response_time))
 
+        bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
+        bandwidth_tuples.append((bw_download, bw_upload))
+        print(f"        {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
+        print(f"        {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
+
         # If the finesse period has passed, calculate the average
         if (time.time() - last_time) >= Constants.FINESSE:
+            print(f"    End of finesse period")
             if response_times:
                 response_time_average = sum(response_times) / len(response_times)
                 response_times.clear()  # Reset for the next finesse period
             else:
                 response_time_average = 0
+            print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms")
 
-            print(f"{Constants.RESPONSE_TIME_VM_}: {response_time_average} ms")
-
-            bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
+            if bandwidth_tuples:
+                bw_download = sum([t[0] for t in bandwidth_tuples]) / len(bandwidth_tuples)
+                bw_upload = sum([t[1] for t in bandwidth_tuples]) / len(bandwidth_tuples)
+                bandwidth_tuples.clear()
+            else:
+                bw_download = 0
+                bw_upload = 0
             print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
             print(f"    {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
 
             current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
             print(f"    {C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
 
-            mem_total_vm, mem_available_vm = get_vm1_data(client_vm1)
+            mem_total_vm, mem_available_vm = parse_memory_info(client_vm1.get_data())
             print(f"    {Constants.MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
             print(f"    {Constants.MEMORY_AVAILABLE_VM_}: {mem_available_vm / mega} MB")
             mem_used_vm = mem_total_vm - mem_available_vm

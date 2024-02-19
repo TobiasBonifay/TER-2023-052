@@ -12,10 +12,14 @@ class Client:
         self.port = port
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((self.host, self.port))
+        self.client.settimeout(1)
 
     def get_data(self):
-        data = self.client.recv(4096).decode()
-        return data
+        try:
+            data = self.client.recv(4096).decode()
+            return data.strip()
+        except socket.timeout:
+            return None
 
     def close(self):
         self.client.close()
