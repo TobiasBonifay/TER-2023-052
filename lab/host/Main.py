@@ -75,6 +75,11 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
                     # Handle the case where conversion to float fails
                     print(f"Invalid response time received: {response_time}")
 
+            # Collect the bandwidth data
+            bandwidth = bandwidth_monitor.get_bandwidth()
+            if bandwidth is not None:
+                bandwidth_tuples.append(bandwidth)
+
         # Sleep for a short interval to prevent tight looping
         time.sleep(0.1)  # A short sleep to prevent a tight loop that hogs the CPU
 

@@ -17,7 +17,7 @@ class Client:
     def get_data(self):
         try:
             data = self.client.recv(4096).decode()
-            return data.strip()
+            return data
         except socket.timeout:
             return None
 
