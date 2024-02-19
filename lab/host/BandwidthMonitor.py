@@ -1,6 +1,6 @@
 from threading import Thread, Lock
 
-from scapy.all import sniff, wrpcap
+from scapy.all import sniff
 from scapy.layers.inet import IP
 
 
@@ -25,7 +25,6 @@ class BandwidthMonitor:
         if IP in packet and (packet[IP].src == self.vm_ip or packet[IP].dst == self.vm_ip):
             packet_length = len(packet)
             with self.lock:
-                self.packets.append(packet)
                 if packet[IP].src == self.vm_ip:
                     # Outgoing packet
                     self.bw_download += packet_length
@@ -37,11 +36,6 @@ class BandwidthMonitor:
         while not self.should_stop:
             try:
                 sniff(filter="ip", iface=self.interface, prn=self.packet_callback, store=False, timeout=10)
-                # Write packets to pcap file every 10 seconds
-                if len(self.packets) > 0:
-                    with self.lock:
-                        wrpcap(self.pcap_file, self.packets, append=True)
-                        self.packets.clear()
             except Exception as e:
                 print(f"Packet summary: {self.packets}")
                 print(f"Error monitoring bandwidth: {e}")

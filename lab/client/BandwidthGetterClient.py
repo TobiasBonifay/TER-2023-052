@@ -18,17 +18,15 @@ def run_apache_benchmark():
         output = result.stdout.decode()
         # Parse and return the mean time per request from the benchmark result
         for line in output.splitlines():
+            if "Time Taken" in line:
+                print(line)
             if "Time per request:" in line and "[ms] (mean" in line:
                 # The line format is expected to be: 'Time per request: [time] [ms] (mean, across all concurrent
                 # requests)' Extract the time by splitting by spaces and taking the fourth element
                 mean_time_str = line.split()[3]
-                max_time_str = line.split()[5]
                 # Ensure we only process digits and dot for float conversion
                 if all(char.isdigit() or char == '.' for char in mean_time_str):
-                    print(f"Mean time: {mean_time_str}")
                     return float(mean_time_str)
-            if "Time Taken" in line:
-                print(line)
         return 0.0
     except subprocess.CalledProcessError as e:
         print(f"Error while running apache benchmark: {e.stderr.decode()}")
@@ -74,7 +72,7 @@ def run_server(host, port):
                 try:
                     while True:
                         response_time = run_apache_benchmark()
-                        data_to_send = f"{response_time}"
+                        data_to_send = f"{response_time}\n"
                         conn.sendall(data_to_send.encode())
                         print(f"Sent {data_to_send}")
                 except BrokenPipeError as e:

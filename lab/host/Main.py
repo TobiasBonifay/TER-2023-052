@@ -9,6 +9,7 @@ from lab.host.BandwidthMonitor import BandwidthMonitor
 from lab.host.CGroupManager import CGroupManager
 from lab.host.Client import Client
 from lab.host.ScenarioManager import ScenarioManager
+from lab.host.TcpDump import TcpdumpThread
 from lab.host.Utils import parse_memory_info, load_model, get_output_file_name
 
 continue_running = True
@@ -21,18 +22,28 @@ def get_vm1_data(apache):
 
 
 def get_vm2_data(client):
-    data = client.get_data()
-    print(f"Data: {data}")
-    if data:
-        return float(data)
-    return 0.0
+    buffer = ''
+    while True:
+        data = client.recv(1024).decode()  # Assuming `client` is a socket object here.
+        if not data:
+            break  # No more data.
+        buffer += data
+        if "\n" in buffer:
+            line, _, buffer = buffer.partition("\n")  # Split off one line.
+            try:
+                return float(line)
+            except ValueError:
+                print(f"Could not convert string to float: '{line}'")
+                continue  # Try the next line if this one fails.
+    return 0.0  # Return 0.0 if no valid data was found.
+
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
     while continue_running:
         mega = 1024 * 1024
-        response_time_average, response_time_max = get_vm2_data(client_vm2)
-        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms, peak: {response_time_max} ms")
+        response_time_average = get_vm2_data(client_vm2)
+        print(f"    {Constants.RESPONSE_TIME_VM_}: {response_time_average} ms")
 
         bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
         print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
@@ -85,6 +96,7 @@ def main():
     print(f"Output file: {csv_filename} and {pcap_filename}")
 
     bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
+    tcpdump_thread = TcpdumpThread(INTERFACE, VM_IP, OUTPUT_FILE)
     cgroup_manager = CGroupManager(Constants.VM1_PATH_CGROUP_FILE, Constants.HOST_PATH_CGROUP_FILE,
                                    Constants.THRESHOLD_1, Constants.THRESHOLD_2)
     scenario_manager = ScenarioManager(cgroup_manager, Constants.SCENARIOS, scenario_callback)
@@ -106,6 +118,7 @@ def main():
             model = None
             data_thread = threading.Thread(target=generate_dataset,
                                            args=(apache, client, writer, bandwidth_monitor, cgroup_manager))
+            tcpdump_thread.start()
             data_thread.start()
             scenario_manager.start()
             data_thread.join()
