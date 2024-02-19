@@ -11,3 +11,4 @@ pcapy
 pyarrow
 pandas
 flask
+locust

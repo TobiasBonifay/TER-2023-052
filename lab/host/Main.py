@@ -43,14 +43,30 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor):
     print(f"    {SWAP_HOST_}: {mem_swap / mega} MB")
     response_time = get_vm2_data(client_vm2)
     print(f"    {RESPONSE_TIME_VM_}: {response_time} ms")
+
     bw_download, bw_upload = bandwidth_monitor.get_bandwidth()
     print(f"    {BANDWIDTH_DOWNLOAD_VM_}: {bw_download / mega} MB")
     print(f"    {BANDWIDTH_UPLOAD_VM_}: {bw_upload / mega} MB")
 
+    current_cgroup_limit = cgroup_manager.get_cgroup_memory_limit_vm()
+    print(f"    {C_GROUP_LIMIT_VM_}: {current_cgroup_limit / mega} MB")
+
+    mem_total_vm, mem_available_view = get_vm1_data(client_vm1)
+    print(f"    {MEMORY_TOTAL_VM_}: {mem_total_vm / mega} MB")
+    print(f"    {MEMORY_AVAILABLE_VM_}: {mem_available_view / mega} MB")
+
+    mem_used_vm = mem_total_vm - mem_available_view
+    print(f"    {MEMORY_USED_VM_}: {mem_used_vm / mega} MB")
+
+    mem_host_view = cgroup_manager.get_cgroup_memory_current_vm()
+    print(f"    {MEMORY_HOST_}: {mem_host_view / mega} MB")
+
+    mem_swap = cgroup_manager.get_swap_used_hostview()
+    print(f"    {SWAP_HOST_}: {mem_swap / mega} MB")
+
     writer.writerow(
         [time.time(), current_cgroup_limit, mem_total_vm, mem_available_view, mem_used_vm, mem_host_view, mem_swap,
-         response_time,
-         bw_download, bw_upload])
+         response_time, bw_download, bw_upload])
     print("     Data written to CSV.")
 
 
@@ -88,8 +104,8 @@ def main():
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
     args = parser.parse_args()
     # generate scenarios
-    scenarios = [(1024, 120), (768, 120), (512, 120), (396, 120), (512, 120)
-        , (768, 120), (1024, 120), (768, 120), (512, 120), (396, 120)]
+    scenarios = [(1024, 60), (768, 60), (512, 60), (396, 60), (512, 60)
+        , (768, 60), (1024, 60), (768, 60), (512, 60), (396, 60)]
     scenario_manager = ScenarioManager(cgroup_manager, scenarios, scenario_callback)
     scenario_manager.start()  # Start scenario management in a separate thread
 
@@ -109,9 +125,8 @@ def main():
         # Initialize the CSV file writer and begin the main loop for data collection or prediction
         with open(csv_filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            header = [TIME, C_GROUP_LIMIT_VM_, MEMORY_TOTAL_VM_, MEMORY_AVAILABLE_VM_, MEMORY_USED_VM_,
-                      MEMORY_HOST_, SWAP_HOST_, RESPONSE_TIME_VM_, BANDWIDTH_DOWNLOAD_VM_,
-                      BANDWIDTH_UPLOAD_VM_]
+            header = [TIME, C_GROUP_LIMIT_VM_, MEMORY_TOTAL_VM_, MEMORY_AVAILABLE_VM_, MEMORY_USED_VM_, MEMORY_HOST_,
+                      SWAP_HOST_, RESPONSE_TIME_VM_, BANDWIDTH_DOWNLOAD_VM_, BANDWIDTH_UPLOAD_VM_]
             if args.mode == 'predict':
                 header.append('Action Taken')
 
@@ -124,6 +139,7 @@ def main():
                 elapsed_time = current_time - start_time
 
                 if elapsed_time >= FINESSE:
+                    print(f"Elapsed time: {t} seconds")
                     t += elapsed_time
                     start_time = current_time
 

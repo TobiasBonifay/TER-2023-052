@@ -1,12 +1,18 @@
+import argparse
 import socket
 import subprocess
 
 from lab.common.Constants import VM2_IP, VM1_IP, VM2_PORT
 
+parser = argparse.ArgumentParser(description='Server Test Script')
+parser.add_argument('--test-type', choices=['apache', 'locust'], required=True, help='Type of test to run (apache or '
+                                                                                     'locust)')
+args = parser.parse_args()
+
 
 def run_apache_benchmark():
     """Run the Apache benchmark and return the mean time per request."""
-    command = f"ab -n 100000 -c 500 http://{VM1_IP}/"
+    command = f"ab -n 100000 -c 500 http://{VM1_IP}:8080/"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode()
@@ -25,6 +31,27 @@ def run_apache_benchmark():
         return 0
     except ValueError as ve:
         print(f"Value error encountered: {ve}")
+        return 0
+
+
+def run_locust_test():
+    # run locust test and take the mean time per request
+    command = f"locust -f Locust.py --headless -u 1000 -r 100 --run-time 1m"
+    try:
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = result.stdout.decode()
+        # Parse and return the mean time per request from the benchmark result
+        for line in output.splitlines():
+            if "Average" in line and "Requests/sec" in line:
+                # The line format is expected to be: 'Time per request: [time] [ms] (mean, across all concurrent
+                # requests)' Extract the time by splitting by spaces and taking the fourth element
+                mean_time_str = line.split()[1]
+                # Ensure we only process digits and dot for float conversion
+                if all(char.isdigit() or char == '.' for char in mean_time_str):
+                    return float(mean_time_str)
+        return 0  # If not found, return 0
+    except subprocess.CalledProcessError as e:
+        print(f"Error while running locust test: {e.stderr.decode()}")
         return 0
 
 
