@@ -23,7 +23,7 @@ def get_vm1_data(apache):
 
 def get_vm2_data(client):
     data = client.get_data()
-    return float(data)
+    return data
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
