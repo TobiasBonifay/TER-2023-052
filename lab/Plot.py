@@ -10,7 +10,7 @@ from lab.common.Constants import BANDWIDTH_UPLOAD_VM_, BANDWIDTH_DOWNLOAD_VM_, R
 # Function to get the latest file in a directory
 def latest_file(path):
     files = os.listdir(path)
-    paths = [os.path.join(path, basename) for basename in files]
+    paths = [os.path.join(path, basename) for basename in files if basename.endswith('.csv')]
     return max(paths, key=os.path.getctime)
 
 
