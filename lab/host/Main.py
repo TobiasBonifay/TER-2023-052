@@ -13,11 +13,11 @@ from lab.host.Utils import parse_memory_info, load_model, get_output_file_name
 
 continue_running = True
 csv_file_lock = threading.Lock()
+mega = 1024 * 1024
 
 
 def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_manager):
     global continue_running, csv_file_lock
-    mega = 1024 * 1024
     response_times = []
     bandwidth_data = []
     last_time = time.time()
@@ -104,7 +104,7 @@ def main():
     pcap_filename = get_output_file_name("scapy_", Constants.PCAP_FILE)
     print(f"Output file: {csv_filename} and {pcap_filename}")
 
-    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
+    bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP)
     tcpdump_thread = TcpdumpThread(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
     cgroup_manager = CGroupManager(Constants.VM1_PATH_CGROUP_FILE, Constants.HOST_PATH_CGROUP_FILE,
                                    Constants.THRESHOLD_1, Constants.THRESHOLD_2)

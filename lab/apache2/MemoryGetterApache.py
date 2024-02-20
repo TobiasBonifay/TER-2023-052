@@ -33,6 +33,7 @@ def run_server(host, port):
                         if not data:
                             break
                         response = get_memory_info()
+                        print(f"Sending memory info")
                         conn.sendall(response.encode())
                 finally:
                     conn.close()

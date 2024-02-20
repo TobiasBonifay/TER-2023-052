@@ -1,6 +1,6 @@
 {
   "HOST_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice",
-  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d35\\x2dap.scope",
+  "VM1_PATH_CGROUP_FILE": "/sys/fs/cgroup/machine.slice/machine-qemu\\x2d37\\x2dap.scope",
   "VM1_IP": "192.168.100.5",
   "VM2_IP": "192.168.100.164",
   "VM1_PORT": 8000,

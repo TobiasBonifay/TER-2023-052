@@ -6,6 +6,8 @@ import tensorflow as tf
 
 from lab.common.Constants import MODEL_PATH
 
+TO_MB = 1024
+
 
 def get_output_file_name(prefix='vm_data_', end='csv'):
     # Get the current file's directory
@@ -46,12 +48,12 @@ def parse_memory_info(meminfo):
             # print(f"    Buffers (MB): {mem_buffers / 1024}")
         elif 'Cached' in line and 'SwapCached' not in line:
             mem_cached = int(re.search(r'\d+', line).group())
-            # print(f"    Cached (MB): {mem_cached / 1024}")
+            print(f"    Cached (MB): {mem_cached / 1024}")
         elif 'MemAvailable' in line:
             mem_available = int(re.search(r'\d+', line).group())
             # print(f"    MemAvailable (MB): {mem_available / 1024}")
 
-    return mem_total * 1024, mem_available * 1024
+    return mem_total * TO_MB, mem_available * TO_MB
 
 
 def load_model():

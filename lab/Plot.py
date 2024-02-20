@@ -29,12 +29,12 @@ fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
 
 # First plot for bandwidth
 MEGA = 1024 * 1024
-ax1.plot(data['Time'], data[BANDWIDTH_DOWNLOAD_VM_] / MEGA, '-o', label=BANDWIDTH_DOWNLOAD_VM_, color='blue')
-ax1.plot(data['Time'], data[BANDWIDTH_UPLOAD_VM_] / MEGA, '-o', label=BANDWIDTH_UPLOAD_VM_, color='green')
+ax1.plot(data['Time'], data[BANDWIDTH_DOWNLOAD_VM_], '-o', label=BANDWIDTH_DOWNLOAD_VM_, color='blue')
+ax1.plot(data['Time'], data[BANDWIDTH_UPLOAD_VM_] * 20, '-o', label=BANDWIDTH_UPLOAD_VM_ + " x20", color='green')
 ax1.set_xlabel('Time')
 ax1.set_ylabel('Bandwidth (Mo/s)')
 ax1.set_title('Bandwidth Usage Over Time')
-ax1.legend()
+ax1.legend(loc='upper left', bbox_to_anchor=(0, 1.2), ncol=2)
 ax1.grid(True)
 
 # Second plot for memory usage
@@ -47,7 +47,8 @@ ax2.plot(data['Time'], data[SWAP_HOST_] / MEGA, '-o', label=SWAP_HOST_, color='o
 ax2.set_xlabel('Time')
 ax2.set_ylabel('Memory (Mo)')
 ax2.set_title('Memory Usage Over Time')
-ax2.legend()
+# tiny legend
+ax2.legend(loc='upper left', bbox_to_anchor=(0, 1.05), ncol=2)
 ax2.grid(True)
 
 # Third plot for response time
@@ -55,7 +56,6 @@ ax3.plot(data['Time'], data[RESPONSE_TIME_VM_], '-o', label=RESPONSE_TIME_VM_, c
 ax3.set_xlabel('Time')
 ax3.set_ylabel('Response Time (ms)')
 ax3.set_title('Response Time Over Time')
-ax3.legend()
 ax3.grid(True)
 
 # Show the plots

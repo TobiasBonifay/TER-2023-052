@@ -12,7 +12,6 @@ class Client:
         self.port = port
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((self.host, self.port))
-        self.client.settimeout(1000)
 
     def get_data(self):
         self.client.send(b"GET")

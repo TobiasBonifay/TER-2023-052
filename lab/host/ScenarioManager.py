@@ -1,6 +1,8 @@
 import threading
 import time
 
+TO_MEGA = 1024 * 1024
+
 
 class ScenarioManager:
     def __init__(self, cgroup_manager, scenarios, callback):
@@ -19,7 +21,7 @@ class ScenarioManager:
             if self.stop_event.is_set():
                 break
             self.callback('start', i)
-            self.cgroup_manager.change_cgroup_limit_vm(limit * 1024 * 1024)
+            self.cgroup_manager.change_cgroup_limit_vm(limit * TO_MEGA)
             time.sleep(duration)
             self.callback('end', i)
         self.callback('complete', len(self.scenarios))

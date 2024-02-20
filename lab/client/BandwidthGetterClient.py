@@ -18,8 +18,6 @@ def run_apache_benchmark():
         output = result.stdout.decode()
         # Parse and return the mean time per request from the benchmark result
         for line in output.splitlines():
-            if "Taken" in line:
-                print(line)
             if "Time per request:" in line and "[ms] (mean" in line:
                 # The line format is expected to be: 'Time per request: [time] [ms] (mean, across all concurrent
                 # requests)' Extract the time by splitting by spaces and taking the fourth element

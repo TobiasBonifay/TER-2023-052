@@ -9,15 +9,13 @@ class BandwidthMonitor:
     Monitor bandwidth usage on a specific interface and IP address
     """
 
-    def __init__(self, interface, vm_ip, pcap_file):
+    def __init__(self, interface, vm_ip):
         self.should_stop = False
         self.interface = interface
         self.vm_ip = vm_ip
         self.bw_download = 0
         self.bw_upload = 0
         self.lock = Lock()
-        self.pcap_file = pcap_file
-        self.packets = []
         self.thread = Thread(target=self.monitor_bandwidth, daemon=True)
         self.thread.start()
 
@@ -37,7 +35,6 @@ class BandwidthMonitor:
             try:
                 sniff(filter="ip", iface=self.interface, prn=self.packet_callback, store=False, timeout=10)
             except Exception as e:
-                print(f"Packet summary: {self.packets}")
                 print(f"Error monitoring bandwidth: {e}")
 
     def get_bandwidth(self):

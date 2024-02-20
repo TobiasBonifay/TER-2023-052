@@ -3,6 +3,9 @@ import threading
 
 
 class TcpdumpThread(threading.Thread):
+    """
+    A class to run tcpdump in a separate thread.
+    """
     def __init__(self, interface, vm_ip, output_file):
         super().__init__(daemon=True)
         self.interface = interface
