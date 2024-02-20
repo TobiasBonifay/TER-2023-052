@@ -2,6 +2,8 @@ import os
 
 from lab.common.Constants import MIN_CGROUP_LIMIT, FINESSE
 
+MEGA = 1024 * 1024
+
 
 class CGroupManager:
     def __init__(self, vm_path_cgroup_file, hypervisor_path_cgroup_file, threshold_1=2000, threshold_2=4000):
@@ -20,14 +22,15 @@ class CGroupManager:
         try:
             with open(self.vm_cgroup_memory_max, "w") as f:
                 print(
-                    f"Changing cgroup limit from {self.get_cgroup_memory_limit_vm() / (1024 * 1024)} to {new_limit / (1024 * 1024)}")
+                    f"Changing cgroup limit from {self.get_cgroup_memory_limit_vm() / MEGA} to {new_limit / MEGA}")
                 # if below Constants.MIN_CGROUP_LIMIT, set to Constants.MIN_CGROUP_LIMIT
                 if new_limit < MIN_CGROUP_LIMIT:
                     print(f"Limit too low, setting to {MIN_CGROUP_LIMIT}")
                     new_limit = MIN_CGROUP_LIMIT
                 f.write(str(new_limit))
         except FileNotFoundError as e:
-            print(f"File not found - {e}")
+            print(f"File not found - {e}. You probably need to run the script with administrator privileges, or the "
+                  f"VM is not running. Maybe you killed it?")
             exit(1)
         except PermissionError as e:
             print(f"Permission Error - {e}")

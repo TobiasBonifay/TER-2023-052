@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 def run_apache_benchmark():
     """Run the Apache benchmark and return the mean time per request."""
-    command = f"ab -n 20000 -c 1000 http://{VM1_IP}/"
+    command = f"ab -n 40000 -c 200 http://{VM1_IP}/"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode()
