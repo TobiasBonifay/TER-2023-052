@@ -95,6 +95,8 @@ def main():
     parser = argparse.ArgumentParser(description='Control operation mode of the script.')
     parser.add_argument('--mode', type=str, default='collect', choices=['collect', 'predict'],
                         help='Operation mode: "collect" to generate dataset, "predict" to run model and adjust cgroup.')
+    parser.add_argument('--capture', action='store_true',
+                        help='Enable packet capture using tcpdump')
     args = parser.parse_args()
 
     apache = Client(Constants.VM1_IP, Constants.VM1_PORT)
@@ -105,6 +107,7 @@ def main():
     print(f"Output file: {csv_filename} and {pcap_filename}")
 
     bandwidth_monitor = BandwidthMonitor(Constants.INTERFACE, Constants.VM1_IP)
+
     tcpdump_thread = TcpdumpThread(Constants.INTERFACE, Constants.VM1_IP, pcap_filename)
     cgroup_manager = CGroupManager(Constants.VM1_PATH_CGROUP_FILE, Constants.HOST_PATH_CGROUP_FILE,
                                    Constants.THRESHOLD_1, Constants.THRESHOLD_2)
@@ -127,13 +130,15 @@ def main():
             model = None
             data_thread = threading.Thread(target=generate_dataset,
                                            args=(apache, client, writer, bandwidth_monitor, cgroup_manager))
-            tcpdump_thread.start()
+            if args.capture:
+                tcpdump_thread.start()
             data_thread.start()
             scenario_manager.start()
             data_thread.join()
 
     scenario_manager.stop()
-    tcpdump_thread.stop()
+    if args.capture:
+        tcpdump_thread.stop()
     print("Script completed.")
 
 
