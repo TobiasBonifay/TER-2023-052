@@ -11,4 +11,5 @@ pcapy
 pyarrow
 pandas
 flask
-locust
+# locust
+ping3

@@ -3,6 +3,8 @@ import csv
 import threading
 import time
 
+from ping3 import ping
+
 from lab.common import Constants
 from lab.host.BandwidthMonitor import BandwidthMonitor
 from lab.host.CGroupManager import CGroupManager
@@ -20,6 +22,7 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
     global continue_running, csv_file_lock
     response_times = []
     bandwidth_data = []
+    icmp_response_times = []
     last_time = time.time()
 
     while continue_running:
@@ -39,6 +42,11 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
         bandwidth_data.append((bw_download, bw_upload))
 
         current_time = time.time()
+        # ICMP ping
+        icmp_response_time = ping(Constants.VM1_IP, unit='ms')
+        if icmp_response_time is not None:
+            print(f"        + {Constants.ICMP_RESPONSE_TIME_VM_}: {icmp_response_time} s")
+            icmp_response_times.append(icmp_response_time)  # Convert to ms ?
 
         # If the finesse period has passed, calculate the average
         if current_time - last_time >= Constants.FINESSE:
@@ -54,6 +62,9 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
             response_times.clear()
             bandwidth_data.clear()
             last_time = current_time
+            icmp_response_time_average = sum(icmp_response_times) / len(
+                icmp_response_times) if icmp_response_times else 0
+            print(f"    {Constants.ICMP_RESPONSE_TIME_VM_}: {icmp_response_time_average} ms")
 
             # Additional metrics collection
             meminfo_data = client_vm1.get_data() if client_vm1.get_data() else "MemTotal: 0 kB\nMemAvailable: 0 kB"
@@ -67,12 +78,14 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
 
             mem_swap = cgroup_manager.get_swap_used_hostview()
             print(f"    {Constants.SWAP_HOST_}: {mem_swap / mega} MB")
+            # Resetting ICMP response times for the next period
+            icmp_response_times.clear()
 
             # CSV writing
             with csv_file_lock:
                 writer.writerow([
                     current_time, current_cgroup_limit, mem_total_vm, mem_available_vm,
-                    mem_used_vm, mem_host_view, mem_swap, response_time_average,
+                    mem_used_vm, mem_host_view, mem_swap, response_time_average, icmp_response_time_average,
                     bw_download_avg / mega, bw_upload_avg / mega
                 ])
 
@@ -117,8 +130,8 @@ def main():
         writer = csv.writer(file)
         header = [Constants.TIME, Constants.C_GROUP_LIMIT_VM_, Constants.MEMORY_TOTAL_VM_,
                   Constants.MEMORY_AVAILABLE_VM_, Constants.MEMORY_USED_VM_, Constants.MEMORY_HOST_,
-                  Constants.SWAP_HOST_, Constants.RESPONSE_TIME_VM_, Constants.BANDWIDTH_DOWNLOAD_VM_,
-                  Constants.BANDWIDTH_UPLOAD_VM_]
+                  Constants.SWAP_HOST_, Constants.RESPONSE_TIME_VM_, Constants.ICMP_RESPONSE_TIME_VM_,
+                  Constants.BANDWIDTH_DOWNLOAD_VM_, Constants.BANDWIDTH_UPLOAD_VM_]
         if args.mode == 'predict':
             header.append(Constants.ACTION_TAKEN)
         writer.writerow(header)
