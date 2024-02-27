@@ -32,6 +32,9 @@ def generate_dataset(client_vm1, client_vm2, writer, bandwidth_monitor, cgroup_m
                 new_response_time = float(response_time)
                 print(f"        + {Constants.RESPONSE_TIME_VM_}: {new_response_time} ms")
                 response_times.append(new_response_time)
+            else:
+                print("No response time received")
+                response_times.append(0)
         except ValueError:
             print("Invalid response time received")
 

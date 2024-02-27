@@ -3,6 +3,8 @@ from threading import Thread, Lock
 from scapy.all import sniff
 from scapy.layers.inet import IP
 
+from lab.common import Constants
+
 
 class BandwidthMonitor:
     """
@@ -33,7 +35,8 @@ class BandwidthMonitor:
     def monitor_bandwidth(self):
         while not self.should_stop:
             try:
-                sniff(filter="ip", iface=self.interface, prn=self.packet_callback, store=False, timeout=10)
+                sniff(filter="ip", iface=self.interface, prn=self.packet_callback, store=False,
+                      timeout=Constants.FINESSE)
             except Exception as e:
                 print(f"Error monitoring bandwidth: {e}")
 
@@ -43,6 +46,7 @@ class BandwidthMonitor:
             bw_upload = self.bw_upload
             self.bw_download = 0
             self.bw_upload = 0
+        print(f"Bandwidth: {bw_download} {bw_upload}")
         return bw_download, bw_upload
 
     def stop(self):
