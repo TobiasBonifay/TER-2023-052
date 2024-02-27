@@ -28,6 +28,7 @@ except FileNotFoundError as e:
 BANDWIDTH_UPLOAD_VM_ = 'VM2 VIEW Bandwidth Upload'
 BANDWIDTH_DOWNLOAD_VM_ = 'VM2 VIEW Bandwidth Download'
 RESPONSE_TIME_VM_ = 'VM2 VIEW Response Time'
+ICMP_RESPONSE_TIME_VM_ = 'ICMP Response Time'
 SWAP_HOST_ = 'HOST VIEW VM Current Swap'
 MEMORY_HOST_ = 'HOST VIEW VM Memory used'
 MEMORY_AVAILABLE_VM_ = 'VM VIEW Memory Available'
@@ -37,4 +38,4 @@ C_GROUP_LIMIT_VM_ = 'VM VIEW Current CGroup Limit'
 ACTION_TAKEN = 'Action Taken'
 TIME = 'Time'
 
-SCENARIOS = [(1024, 90), (768, 90), (512, 90), (256, 90), (1024, 90)]
+SCENARIOS = [(2048, 120), (1536, 120), (1024, 120), (1536, 120), (2048, 120)]
